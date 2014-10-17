@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "./ImageProcessing.py", line 71, in <module>
+    main()
+  File "./ImageProcessing.py", line 64, in main
+    somethingDifferent(myImg, outputFolder, thresholdLevels)
+  File "./ImageProcessing.py", line 18, in somethingDifferent
+    imag = imag.convert("L")
+  File "/usr/local/lib/python2.7/dist-packages/PIL/Image.py", line 679, in convert
+    self.load()
+  File "/usr/local/lib/python2.7/dist-packages/PIL/ImageFile.py", line 189, in load
+    d = Image._getdecoder(self.mode, d, a, self.decoderconfig)
+  File "/usr/local/lib/python2.7/dist-packages/PIL/Image.py", line 385, in _getdecoder
+    raise IOError("decoder %s not available" % decoder_name)
+IOError: decoder zip not available

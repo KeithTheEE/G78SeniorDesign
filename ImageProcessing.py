@@ -9,7 +9,20 @@ sudo apt-get install python-dev
 sudo easy_install -U distribute
 sudo apt-get install python-pip
 sudo pip install rpi.gpio
-sudo pip install PIL
+X Ignore this, causes error, see below X: sudo pip install PIL
+
+sudo git init
+sudo git remote add origin https://github.com/CrakeNotSnowman/G78SeniorDesign
+sudo git pull origin master
+
+sudo ./ImageProcessing.py > raspberryPiError.txt 2>&1
+Error removed:
+	sudo pip uninstall PIL
+	sudo pip install pillow
+
+sudo shutdown -h now
+
+
 '''
 
    

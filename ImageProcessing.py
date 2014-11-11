@@ -5,10 +5,13 @@ import numpy
 import time
 import threading
 import Queue
+import serial
+import rpSerial
 
 '''
-
-Commands for the raspberry pi:
+G78 Senior Design Project:
+    Raspberry Pi Code, image Processing
+payloads for the raspberry pi:
     sudo apt-get install python-dev
     sudo easy_install -U distribute
     sudo apt-get install python-pip
@@ -66,14 +69,15 @@ class populateRasterQueueThread(threading.Thread):
 	rasterQ(self.imagA, self.q, self.levels)
 
 class serialManagerThread(threading.Thread):
-    def __init__(self, q):
+    def __init__(self, q, ser):
 	threading.Thread.__init__(self)
 	self.name = "Serial"
 	#self.daemon = True
 	self.q = q
+	self.ser = ser
     def run(self):
 	print "Starting serial communication"
-	serialManager(self.q)
+	serialManager(self.q, self.ser)
 
 def getLevel(pixel, levels):
     value = len(levels)
@@ -83,13 +87,37 @@ def getLevel(pixel, levels):
 	    break
     return value
 
-def buildCommand(value, xLoc, yLoc, keepOnFlag):
+def buildpayload(value, xLoc, yLoc, keepOnFlag):
     # value: 		2 bits
     # xLoc: 		13 bits
     # yLoc: 		13 bits
     # keepOnFlag:	1 bit
     # total:		29 bits, occupy 32
-    command = 0x000000
+
+    # Startx: 0x02
+    # Command: 0x0B
+    # Payload 0xNNNNNNNN
+    # Checksum 0xNN
+    # EndX: 0x03
+    '''
+    # Recieve
+Start : 0x02
+Acknow	0xAA
+Command	0x0B
+ETx	0x03
+
+
+    # Ready for more
+Start	0x02
+SendM	0x1B
+End	0x03
+
+    # Pi will respond
+	0x02
+	0x1B
+	0x3
+    ''' 
+    payload = 0x00000000
     valMask = 3
     xMask = 8191
     yMask = 8191
@@ -101,16 +129,16 @@ def buildCommand(value, xLoc, yLoc, keepOnFlag):
     yLoc = yLoc & yMask
     keepOnFlag = keepOnFlag & onMask
 
-    #Set command
-    command = command | value
-    command = command << 13
-    command = command | xLoc
-    command = command << 13
-    command = command | yLoc
-    command = command << 1
-    command = command | keepOnFlag    
-    #print int(command)
-    return command
+    #Set payload
+    payload = payload | value
+    payload = payload << 13
+    payload = payload | xLoc
+    payload = payload << 13
+    payload = payload | yLoc
+    payload = payload << 1
+    payload = payload | keepOnFlag    
+    #print int(payload)
+    return payload
 
 def rasterQ(imagA, q, levels):
     print "Temp, rasterQ"
@@ -132,8 +160,8 @@ def rasterQ(imagA, q, levels):
 		xLoc = i
 		yLoc = ySize - j - 1	
 	    if (value > 0): #skip all blank areas 
-		command = buildCommand(value-1, xLoc, yLoc, False)
-		q.put(command)
+		payload = buildpayload(value-1, xLoc, yLoc, False)
+		q.put(payload)
 	    else: # FOR ERROR CHECK
 		skippedPix += 1
 	leftToRight = not leftToRight
@@ -144,16 +172,41 @@ def edQ(imagA, q, levels):
     print "Temp, edQ"
     return
 
-def serialManager(q):
+def serialManager(q, ser):
     # Open Serial Communication
     # Send (0,0) coordinate, 
     #   Wait for confimation of recieve
-    #   Wait for ready command
+    #   Wait for ready payload
     #   Start Pulling from Queue Loop
     #     ...
     #   Verify Queue is done (check to see that neither
     #		rasterQ nor edQ threads are running)
     # Close Serail Comm
+
+
+    # Startx: 0x02
+    # Command: 0x0B
+    # Payload 0xNNNNNNNN
+    # Checksum 0xNN
+    # EndX: 0x03
+    '''
+    # Recieve
+Start : 0x02
+Acknow	0xAA
+Command	0x0B
+ETx	0x03
+
+
+    # Ready for more
+Start	0x02
+SendM	0x1B
+End	0x03
+
+    # Pi will respond
+	0x02
+	0x1B
+	0x3
+    ''' 
     print "Starting Serial"
     pixCount = 0
     i = 0
@@ -161,8 +214,9 @@ def serialManager(q):
         time.sleep(1)
 	i += 1
 	while not q.empty():
-	    command = q.get()
-	    #print int(command)
+	    payload = q.get()
+	    #print int(payload)
+	    rpSerial.sendPix(ser, payload)
 	    pixCount += 1
 	    time.sleep(.0001)
 	    q.task_done()
@@ -190,6 +244,8 @@ def rasterImage(myImg, size):
 
 
 def edgeDetectImage(myImg, size):
+    # Gimp from command line? or inkscape 
+    # 
     imag = Image.open(myImg)
     imag = imag.filter(ImageFilter.EDGE_ENHANCE)
     imag = imag.filter(ImageFilter.FIND_EDGES)
@@ -226,6 +282,18 @@ def main():
     size = (128, 128)
     # Set Queue
     q = Queue.Queue()
+    # Set Serial Ports
+    myBaud = 9600
+    myTimeO = 10
+    # Rasp Pi: /dev/ttyAMA0
+    # Laptop: check ports: 
+    ser = serial.Serial("/dev/ttyACM0", baudrate = myBaud, timeout = myTimeO)
+    connected = False 
+    while not connected:
+	serin = ser.read()
+	connected = True
+    ser.write("A")
+
 
 
     # Get image from file or camera 
@@ -236,15 +304,17 @@ def main():
     if (mode == 1):
 	myA = edgeDetectImage(myImg, size)
 	threadPop = populateEDQueueThread(myA, q, thresholdLevels)
-	threadSerial = serialManagerThread(q)
+	threadSerial = serialManagerThread(q, ser)
 	threadPop.start()
 	threadSerial.start()
     elif (mode == 0):
 	myA = rasterImage(myImg, size)
 	threadPop = populateRasterQueueThread(myA, q, thresholdLevels)
-	threadSerial = serialManagerThread(q)
+	threadSerial = serialManagerThread(q, ser)
 	threadPop.start()
 	threadSerial.start()
+
+    # send Start Image Command to uC
 
 
     # begin image processing & serial

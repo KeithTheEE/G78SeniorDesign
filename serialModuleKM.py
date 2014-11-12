@@ -8,28 +8,48 @@ import time
 class printQueueThread(threading.Thread):
     def __init__(self, q):
 	threading.Thread.__init__(self)
+	self._stop = threading.Event()
 	self.name = "SerialPrinter"
 	self.q = q
+	self.daemon = True
     def run(self):
 	justPrintIt(self.q)
+    def stop(self):
+	self._stop.set()
+    def stopped(self):
+	return self._stop.isSet()
+
 
 class serialReadThread(threading.Thread):
     def __init__(self, ser, q):
 	threading.Thread.__init__(self)
+	self._stop = threading.Event()
 	self.name = "SerialReader"
 	self.q = q
 	self.ser = ser
+	self.daemon = True
     def run(self):
 	mySerialRead(self.ser, self.q)
+    def stop(self):
+	self._stop.set()
+    def stopped(self):
+	return self._stop.isSet()
+
 
 class serialWriteThread(threading.Thread):
     def __init__(self, ser, q):
 	threading.Thread.__init__(self)
+	self._stop = threading.Event()
 	self.name = "SerialWriter"
 	self.q = q
 	self.ser = ser
+	self.daemon = True
     def run(self):
 	mySerialWrite(self.ser, self.q)
+    def stop(self):
+	self._stop.set()
+    def stopped(self):
+	return self._stop.isSet()
 
 def justPrintIt(q):
     while True:
@@ -60,7 +80,6 @@ def mySerialWrite(ser, q):
 	if (myMsg != ""):
 	    try:
 		ser.write(myMsg)
-		#q.put("\n")
 	    except:
 		q.put(str("Could not Send: " + str(myMsg)))
     
@@ -86,18 +105,24 @@ def initalize():
     print "\t*****************************************"
 
     printThread = printQueueThread(q)
-    printThread.start()
     readThread = serialReadThread(ser, q)
-    readThread.start()
     writeThread = serialWriteThread(ser, q)
-    writeThread.start()
+    
+    try: 
+	printThread.start()
+	readThread.start()
+	writeThread.start()
+	while True:
+	    time.sleep(1)
+    except(KeyboardInterrupt, SystemExit):
+	writeThread.stop()
+	readThread.stop()
+	printThread.stop()
+	print "\t*****************************************"
+	print "\t* Exited Serial Port Communication\t*"
+	print "\t*****************************************"
 
-    printThread.join()
-    readThread.join()
-    writeThread.join()
 
-    #while True:
-	#time.sleep(1)
     return
 
 

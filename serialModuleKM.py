@@ -150,6 +150,7 @@ def mySerialRead(ser, q):
 		#q.put("\n")
 
 def mySerialWrite(ser, q):
+    # Eventually add a write-type Str,Bin,Hex types
     while True:
 	myMsg = raw_input() # If in python 3, change raw_input() to input()
 	if (myMsg != ""):
@@ -166,6 +167,7 @@ def initalize(args):
     myBaud = args.baudrate
     myTimeOut = args.time_out
 
+    # Verify that the input mode is valid, if not, treat RX as a char
     mode = args.mode
     mode = mode.lower()
     modeDict = {'s': 's', 'str':'s', 'string':'s',\
@@ -189,8 +191,9 @@ def initalize(args):
 	    print "\tValid ports:"
 	    for i in range(len(valPorts)):
 		print "\t\t", valPorts[i]
-	sys.exit()
+	return
 
+    # Start up
     connected = False 
     print "\t*****************************************"
     print "\t* Opening Serial Port Communication\t*"
@@ -215,6 +218,7 @@ def initalize(args):
 	while True:
 	    time.sleep(1)
     except(KeyboardInterrupt, SystemExit):
+	# Allows for clean exiting
 	writeThread.stop()
 	readThread.stop()
 	printThread.stop()

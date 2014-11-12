@@ -5,6 +5,7 @@ import Queue
 import sys
 import time
 import argparse, textwrap
+import glob
 
 class printQueueThread(threading.Thread):
     def __init__(self, q, mode):
@@ -54,16 +55,54 @@ class serialWriteThread(threading.Thread):
 	return self._stop.isSet()
 
 def interface():
+    defPort = serial_ports()
+    if (defPort > 0):
+	defPort = defPort[0]
+    else:
+	defPort = "/dev/ttyACM0"
     args = argparse.ArgumentParser(
 	prog='SerialModuleKM.py',
 	formatter_class=argparse.RawDescriptionHelpFormatter,
 	description='This is a simple python based serial monitor')
-    args.add_argument('-p', '--port', default="/dev/ttyACM0", help='Serial Port')
+    args.add_argument('-p', '--port', default=defPort, help='Serial Port')
     args.add_argument('-b', '--baudrate', type=int, default=9600, help='Baudrate')
     args.add_argument('-t', '--time-out', type=float, default=0.01, help='Time Out')
     args.add_argument('-m', '--mode', default="s", help="Mode for Inputs: 's':String, 'b':Binary, 'h':Hex")
     args = args.parse_args()
     return args
+
+def serial_ports():
+    """
+	http://stackoverflow.com/questions/12090503
+	    Author: http://stackoverflow.com/users/300783/thomas
+	Lists serial ports
+    :raises EnvironmentError:
+        On unsupported or unknown platforms
+    :returns:
+        A list of available serial ports
+    """
+    if sys.platform.startswith('win'):
+        ports = ['COM' + str(i + 1) for i in range(256)]
+
+    elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+        # this is to exclude your current terminal "/dev/tty"
+        ports = glob.glob('/dev/tty[A-Za-z]*')
+
+    elif sys.platform.startswith('darwin'):
+        ports = glob.glob('/dev/tty.*')
+
+    else:
+        raise EnvironmentError('Unsupported platform')
+
+    result = []
+    for port in ports:
+        try:
+            s = serial.Serial(port)
+            s.close()
+            result.append(port)
+        except (OSError, serial.SerialException):
+            pass
+    return result
 
 def justPrintIt(q, mode):
     i = 3
@@ -112,7 +151,7 @@ def mySerialRead(ser, q):
 
 def mySerialWrite(ser, q):
     while True:
-	myMsg = raw_input()
+	myMsg = raw_input() # If in python 3, change raw_input() to input()
 	if (myMsg != ""):
 	    try:
 		ser.write(myMsg)
@@ -122,10 +161,11 @@ def mySerialWrite(ser, q):
 
 def initalize(args):
     q = Queue.Queue()
-    # Change this to have defaults, and allow input args
     port = args.port
+    valPorts = serial_ports()
     myBaud = args.baudrate
     myTimeOut = args.time_out
+
     mode = args.mode
     mode = mode.lower()
     modeDict = {'s': 's', 'str':'s', 'string':'s',\
@@ -137,8 +177,16 @@ def initalize(args):
 	print "   *** Please use either  's' for String, 'b' forBinary, or 'h' for Hexadecimal *"
     else:
 	mode = modeDict[mode]
+
     # Catch Error of wrong port: display all open ports instead
-    ser = serial.Serial(port, baudrate = myBaud, timeout = myTimeOut)
+    try:
+	ser = serial.Serial(port, baudrate = myBaud, timeout = myTimeOut)
+    except:
+	print "Could not connect to Serial Port\n\tValid Ports:"
+	for i in range(len(valPorts)):
+	    print "\t\t", valPorts[i]
+	sys.exit()
+
     connected = False 
     print "\t*****************************************"
     print "\t* Opening Serial Port Communication\t*"

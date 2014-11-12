@@ -16,6 +16,7 @@ payloads for the raspberry pi:
     sudo easy_install -U distribute
     sudo apt-get install python-pip
     sudo pip install rpi.gpio
+    sudo pip install serial
     X Ignore this, causes error, see below X: sudo pip install PIL
 
     sudo git init
@@ -286,8 +287,8 @@ def main():
     myBaud = 9600
     myTimeO = 10
     # Rasp Pi: /dev/ttyAMA0
-    # Laptop: check ports: 
-    ser = serial.Serial("/dev/ttyACM0", baudrate = myBaud, timeout = myTimeO)
+    # Laptop: check ports: currently ACM0
+    ser = serial.Serial("/dev/ttyAMA0", baudrate = myBaud, timeout = myTimeO)
     connected = False 
     while not connected:
 	serin = ser.read()

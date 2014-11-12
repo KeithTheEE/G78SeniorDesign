@@ -55,7 +55,7 @@ def sendX(ser, messages):
     try:
 	ser.write(str(messages))
     except:
-	print "Failed to send"
+	print "Failed to send\t\trpSerial.sendX"
 	return 1
     return 0
 
@@ -65,7 +65,10 @@ def receiveX(ser, expectations):
     msgD = {}
     msgArray = []
     while True:
-	msg = ser.read()
+	try:
+	    msg = ser.read()
+	except serial.serialutil.SerialException:
+	    pass
 	if (msg == '') :
 	    i +=1
 	    if (i >= 3):

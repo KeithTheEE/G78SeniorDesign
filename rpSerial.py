@@ -52,6 +52,7 @@ readyB = 0x1B
 
 
 def sendX(ser, messages):
+    ser.write("A")
     try:
 	ser.write(str(messages))
     except:
@@ -95,15 +96,10 @@ def sendPix(ser, payload):
     checksum = checksum | (checksum32 & 0x000000FF)
     
     sendX(ser, startX)
-    time.sleep(.1)
     sendX(ser, burn)
-    time.sleep(.1)
     sendX(ser, payload)
-    time.sleep(.1)
     sendX(ser, checksum)
-    time.sleep(.1)
     sendX(ser, endX)
-    time.sleep(.1)
 
     quality = receiveX(ser, [startX, acknow, burn, endX])
     print "\t\tVal: ", quality

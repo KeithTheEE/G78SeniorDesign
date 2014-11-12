@@ -56,7 +56,7 @@ class serialWriteThread(threading.Thread):
 
 def interface():
     defPort = serial_ports()
-    if (defPort > 0):
+    if (len(defPort) > 0):
 	defPort = defPort[0]
     else:
 	defPort = "/dev/ttyACM0"
@@ -182,9 +182,13 @@ def initalize(args):
     try:
 	ser = serial.Serial(port, baudrate = myBaud, timeout = myTimeOut)
     except:
-	print "Could not connect to Serial Port\n\tValid Ports:"
-	for i in range(len(valPorts)):
-	    print "\t\t", valPorts[i]
+	print "Could not connect to Serial Port"
+	if (len(valPorts) == 0):
+	    print "\tNo valid ports found"
+	else:
+	    print "\tValid ports:"
+	    for i in range(len(valPorts)):
+		print "\t\t", valPorts[i]
 	sys.exit()
 
     connected = False 

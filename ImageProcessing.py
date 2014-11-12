@@ -292,7 +292,7 @@ def main():
     myTimeO = 10
     # Rasp Pi: /dev/ttyAMA0
     # Laptop: check ports: currently ACM0
-    ser = serial.Serial("/dev/ttyACM0", baudrate = myBaud, timeout = myTimeO)
+    ser = serial.Serial("/dev/ttyAMA0", baudrate = myBaud, timeout = myTimeO)
     connected = False 
     print "Opening Serial Port Communication"
     while not connected:

@@ -68,7 +68,7 @@ def receiveX(ser, expectations):
 	try:
 	    msg = ser.read()
 	except serial.serialutil.SerialException:
-	    pass
+	    msg = ''
 	if (msg == '') :
 	    i +=1
 	    if (i >= 3):

@@ -166,7 +166,7 @@ def rasterQ(imagA, q, levels):
 	    if (value > 0): #skip all blank areas 
 		payload = buildpayload(value-1, xLoc, yLoc, False)
 		q.put(payload)
-		print "\t[Queue]->", int(payload)
+		#print "\t[Queue]->", int(payload)
 	    else: # FOR ERROR CHECK
 		skippedPix += 1
 	leftToRight = not leftToRight

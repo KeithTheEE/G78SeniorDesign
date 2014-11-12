@@ -166,6 +166,7 @@ def rasterQ(imagA, q, levels):
 	    if (value > 0): #skip all blank areas 
 		payload = buildpayload(value-1, xLoc, yLoc, False)
 		q.put(payload)
+		print "\t[Queue]->", int(payload)
 	    else: # FOR ERROR CHECK
 		skippedPix += 1
 	leftToRight = not leftToRight
@@ -219,7 +220,7 @@ End	0x03
 	i += 1
 	while not q.empty():
 	    payload = q.get()
-	    #print int(payload)
+	    print "\t[Queue]->", int(payload)
 	    rpSerial.sendPix(ser, payload)
 	    pixCount += 1
 	    time.sleep(.0001)
@@ -291,7 +292,7 @@ def main():
     myTimeO = 10
     # Rasp Pi: /dev/ttyAMA0
     # Laptop: check ports: currently ACM0
-    ser = serial.Serial("/dev/ttyAMA0", baudrate = myBaud, timeout = myTimeO)
+    ser = serial.Serial("/dev/ttyACM0", baudrate = myBaud, timeout = myTimeO)
     connected = False 
     print "Opening Serial Port Communication"
     while not connected:

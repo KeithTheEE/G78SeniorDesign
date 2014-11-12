@@ -3,6 +3,7 @@ import serial
 import threading
 import Queue
 import sys
+import time
 
 class printQueueThread(threading.Thread):
     def __init__(self, q):
@@ -52,23 +53,6 @@ def mySerialRead(ser, q):
 		recentMessage = False
 		i = 0
 		q.put("\n")
-	   
-	    '''
-	    msgArray.append(msg)
-	    if (len(msgArray) > 50):
-		for i in range(len(msgArray)):
-		    msgStr = str(msgStr) + str(hex(msgArray[i]))
-		msgArray = []
-		q.put(msgStr)
-		msgStr = ""
-	else:
-	    if (len(msgArray) > 0):
-		for i in range(len(msgArray)):
-		    msgStr = str(msgStr) + str(msgArray[i])
-		msgArray = []
-		q.put(msgStr)
-		msgStr = ""
-	    '''
 
 def mySerialWrite(ser, q):
     while True:
@@ -76,7 +60,7 @@ def mySerialWrite(ser, q):
 	if (myMsg != ""):
 	    try:
 		ser.write(myMsg)
-		q.put("\n")
+		#q.put("\n")
 	    except:
 		q.put(str("Could not Send: " + str(myMsg)))
     
@@ -86,7 +70,7 @@ def initalize():
     # Change this to have defaults, and allow input args
     port = "/dev/ttyACM0"
     myBaud = 9600
-    myTimeOut = 10
+    myTimeOut = .01
     # Catch Error of wrong port: display all open ports instead
     ser = serial.Serial(port, baudrate = myBaud, timeout = myTimeOut)
     connected = False 
@@ -108,8 +92,12 @@ def initalize():
     writeThread = serialWriteThread(ser, q)
     writeThread.start()
 
-    while True:
-	pass
+    printThread.join()
+    readThread.join()
+    writeThread.join()
+
+    #while True:
+	#time.sleep(1)
     return
 
 

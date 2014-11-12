@@ -129,12 +129,14 @@ def initalize(args):
     mode = args.mode
     mode = mode.lower()
     modeDict = {'s': 's', 'str':'s', 'string':'s',\
-		'b': 'b', 'bin':'b', 'binary':'s',\
+		'b': 'b', 'bin':'b', 'binary':'b',\
 		'h': 'h', 'hex':'h', 'hexadecimal':'h'}
     if (mode not in modeDict):
 	mode = 's'
 	print "   *** RX is being treated as characters, Your input was invalid                *"
 	print "   *** Please use either  's' for String, 'b' forBinary, or 'h' for Hexadecimal *"
+    else:
+	mode = modeDict[mode]
     # Catch Error of wrong port: display all open ports instead
     ser = serial.Serial(port, baudrate = myBaud, timeout = myTimeOut)
     connected = False 

@@ -215,7 +215,7 @@ End	0x03
     pixCount = 0
     i = 0
     while (i < 5):
-        time.sleep(1)
+        time.sleep(10)
 	i += 1
 	while not q.empty():
 	    payload = q.get()

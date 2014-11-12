@@ -170,7 +170,8 @@ def rasterQ(imagA, q, levels):
 	    else: # FOR ERROR CHECK
 		skippedPix += 1
 	leftToRight = not leftToRight
-    print "Skippied Pix ", skippedPix
+    #print "Skippied Pix ", skippedPix
+    print "Done Processing Image: Queue fully populated"
     return
 
 def edQ(imagA, q, levels):

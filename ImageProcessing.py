@@ -6,6 +6,7 @@ import time
 import threading
 import Queue
 import serial
+import sys
 import rpSerial
 
 '''
@@ -22,6 +23,8 @@ payloads for the raspberry pi:
     sudo git init
     sudo git remote add origin https://github.com/CrakeNotSnowman/G78SeniorDesign
     sudo git pull origin master
+
+    sudo usermod -a -G dialout pi
 
     sudo ./ImageProcessing.py > raspberryPiError.txt 2>&1
     Error removed:
@@ -290,9 +293,11 @@ def main():
     # Laptop: check ports: currently ACM0
     ser = serial.Serial("/dev/ttyAMA0", baudrate = myBaud, timeout = myTimeO)
     connected = False 
+    print "Opening Serial Port Communication"
     while not connected:
 	serin = ser.read()
 	connected = True
+    print "\tSerial Communication Open"
     ser.write("A")
 
 

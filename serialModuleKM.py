@@ -140,7 +140,10 @@ def mySerialRead(ser, q):
     i = 3
     recentMessage = False
     while True:
-	msg = ser.read()
+	try:
+	    msg = ser.read()
+	except:
+	    msg = ""
 	if (msg != ""):
 	    q.put(("R", msg))
 	    recentMessage = True

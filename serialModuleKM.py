@@ -147,6 +147,7 @@ def mySerialRead(ser, q):
 	    i = 0
 	else:
 	    i += 1
+	    time.sleep(0.001)
 	    if( (recentMessage == True) and (i > 3)):
 		recentMessage = False
 		i = 0
@@ -350,7 +351,7 @@ def parseAll(rawMsg):
     return cleanMsg
 
 def mySerialWrite(ser, q, mode):
-    # Eventually add a write-type Str,Bin,Hex types
+
     while True:
 	myMsg = raw_input() # If in python 3, change raw_input() to input()
 	if (myMsg != ""):
@@ -369,6 +370,8 @@ def mySerialWrite(ser, q, mode):
 		#print "KM"#ser.write(myMsg)
 	    #except:
 		#q.put(("E", str("Could not Send: " + str(myMsg))))
+	else:
+	    time.sleep(0.001)
     
 
 def initalize(args):

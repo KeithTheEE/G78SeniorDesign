@@ -156,7 +156,7 @@ def mySerialRead(ser, q):
 		i = 0
 		#q.put("\n")
 
-def hexParse(ser, rawMsg):
+def hexParse(rawMsg):
     # Parsing
     tempMsg = rawMsg.upper()
     tempMsg = tempMsg.split('0X')
@@ -359,10 +359,10 @@ def mySerialWrite(ser, q, mode):
 	myMsg = raw_input() # If in python 3, change raw_input() to input()
 	if (myMsg != ""):
 	    if (mode == 'a'):
-		myMsg = parseAll(rawMsg)		
+		myMsg = parseAll(myMsg)		
 		ser.write(myMsg)
 	    elif (mode == 'h'):
-		myMsg = hexParse(ser, myMsg)		
+		myMsg = hexParse(myMsg)		
 		ser.write(myMsg)
 	    elif (mode == 'b'):
 		myMsg = binParse(myMsg)		

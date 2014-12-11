@@ -49,6 +49,7 @@ resize options:
 
 
 '''
+Qdone = False
 class populateEDQueueThread(threading.Thread):
     def __init__(self, imagA, q, levels, pq):
 	threading.Thread.__init__(self)
@@ -206,6 +207,7 @@ def rasterQ(imagA, q, levels, printq):
     #print "Skippied Pix ", skippedPix
     msg = ("M", "Done Processing Image: Queue fully populated")
     printq.put(msg)
+    Qdone = True
     while not q.empty():
 	time.sleep(1)
     return
@@ -235,8 +237,10 @@ def serialManager(q, ser, printq):
     printq.put(msg)
     pixCount = 0
     i = 0
-    while not q.empty():
+    while not Qdone:
 	rpSerial.rpSerialManager(q, ser)
+    rpSerial.rpSerialManager(q, ser)
+
     return
 
    

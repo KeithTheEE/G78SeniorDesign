@@ -57,7 +57,145 @@ error	= 0x3f
 readyB 	= 0x4d
 
 
+def hexParse(rawMsg):
+    # Parsing
+    tempMsg = rawMsg.upper()
+    tempMsg = tempMsg.split('0X')
+    tempMsg = "".join(tempMsg)
+    tempMsg = tempMsg.split('\X')
+    tempMsg = "".join(tempMsg)
+    hexMsg = 0x00
+    if(len(tempMsg) > 2):
+	if ((tempMsg[0] == "0") and (tempMsg[1] == "X")):
+	    tempMsg = tempMsg[2:]
+    hexVals = set('0123456789ABCDEF')
+    tempMsg = "".join(c for c in tempMsg if c in hexVals)
+
+    # Varibles used
+    hexMsg = ""
+    byteHold = 0x00
+    byteArr = []
+
+    
+    # Start with most sig byte
+    sigBytePoint = len(tempMsg)% 2
+    if (sigBytePoint == 1):
+	# Pack the first Byte
+	if (tempMsg[0] == '0'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x00
+	elif (tempMsg[0] == '1'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x01
+	elif (tempMsg[0] == '2'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x02
+	elif (tempMsg[0] == '3'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x03
+	elif (tempMsg[0] == '4'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x04
+	elif (tempMsg[0] == '5'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x05
+	elif (tempMsg[0] == '6'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x06
+	elif (tempMsg[0] == '7'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x07
+	elif (tempMsg[0] == '8'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x08
+	elif (tempMsg[0] == '9'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x09
+	elif (tempMsg[0] == 'A'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x0A
+	elif (tempMsg[0] == 'B'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x0B
+	elif (tempMsg[0] == 'C'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x0C
+	elif (tempMsg[0] == 'D'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x0D
+	elif (tempMsg[0] == 'E'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x0E
+	elif (tempMsg[0] == 'F'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x0F	
+    	byteArr.append(byteHold)
+    # Rest of sting/bytes
+    byteHold = 0x00
+
+    action = 0
+    for i in range(sigBytePoint, len(tempMsg)):
+	if (tempMsg[i] == '0'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x00
+	elif (tempMsg[i] == '1'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x01
+	elif (tempMsg[i] == '2'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x02
+	elif (tempMsg[i] == '3'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x03
+	elif (tempMsg[i] == '4'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x04
+	elif (tempMsg[i] == '5'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x05
+	elif (tempMsg[i] == '6'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x06
+	elif (tempMsg[i] == '7'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x07
+	elif (tempMsg[i] == '8'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x08
+	elif (tempMsg[i] == '9'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x09
+	elif (tempMsg[i] == 'A'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x0A
+	elif (tempMsg[i] == 'B'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x0B
+	elif (tempMsg[i] == 'C'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x0C
+	elif (tempMsg[i] == 'D'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x0D
+	elif (tempMsg[i] == 'E'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x0E
+	elif (tempMsg[i] == 'F'):
+	    byteHold = byteHold << 4
+	    byteHold = byteHold | 0x0F
+	action += 1
+	if (action == 2):
+	    byteArr.append(byteHold)
+	    byteHold = 0x00
+	    action = 0
+
+	
+    hexMsg = "".join(chr(x) for x in byteArr)
+    return hexMsg
+
+
 def sendX(ser, messages):
+    messages = hexParse(str(messages))
     try:
 	ser.write(str(messages))
     except:

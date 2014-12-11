@@ -53,7 +53,7 @@ class populateEDQueueThread(threading.Thread):
     def __init__(self, imagA, q, levels, pq):
 	threading.Thread.__init__(self)
 	self.name = "EDImagePop"
-	self.daemon = True
+	#self.daemon = True
 	self.q = q
 	self.imagA = imagA
 	self.levels = levels
@@ -70,7 +70,7 @@ class populateRasterQueueThread(threading.Thread):
     def __init__(self, imagA, q, levels, pq):
 	threading.Thread.__init__(self)
 	self.name = "RASTERImagePop"
-	self.daemon = True
+	#self.daemon = True
 	self.q = q
 	self.imagA = imagA
 	self.levels = levels
@@ -87,7 +87,7 @@ class serialManagerThread(threading.Thread):
     def __init__(self, q, ser, pq):
 	threading.Thread.__init__(self)
 	self.name = "Serial"
-	self.daemon = True
+	#self.daemon = True
 	self.q = q
 	self.ser = ser
 	self.pq = pq
@@ -105,7 +105,7 @@ class printQueueThread(threading.Thread):
 	self._stop = threading.Event()
 	self.name = "SerialPrinter"
 	self.q = q
-	self.daemon = True
+	#self.daemon = True
 	self.mode = mode
     def run(self):
 	justPrintIt(self.q, self.mode)
@@ -398,9 +398,9 @@ def main():
 	threadPop.start()
 	threadSerial.start()
     except(KeyboardInterrupt, SystemExit):
-	printThread.stop()
-	threadPop.stop()
-	threadSerial.stop()
+	#printThread.stop()
+	#threadPop.stop()
+	#threadSerial.stop()
 
 
 

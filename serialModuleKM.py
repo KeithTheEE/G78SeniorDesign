@@ -59,7 +59,7 @@ class serialWriteThread(threading.Thread):
 def interface():
     defPort = serial_ports()
     if (len(defPort) > 0):
-	defPort = defPort[0]
+	defPort = defPort[-1]
     else:
 	defPort = "/dev/ttyACM0"
     args = argparse.ArgumentParser(

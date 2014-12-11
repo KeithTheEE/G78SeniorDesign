@@ -81,14 +81,14 @@ def receiveX(ser, expectations):
 		break
 	else :
 	    msgArray.append(msg)
-	    #print "In: \t", (str(msg))
+	    print "In: \t", (str(msg))
 	    msgD[msg] = 1
 	    i = 0
     for j in range(len(expectations)):
 	if expectations[j] not in msgD:
 	    print msgArray
 	    return 1
-    print msgArray
+    print "MSG ARR", msgArray
     return 0
 
 
@@ -135,14 +135,14 @@ def sendPix(ser, payload):
 	sendX(ser, payloadAr[i])
     sendX(ser, checksum)
     sendX(ser, endX)
-    print "hi"
     reciv = receiveX(ser, [startX, acknow, burn, endX] )
-    print reciv
+    print "Recieved\t", reciv
 
     return 
 
 def logicFlow(ser, payload):
     maxWait = 5
+    ser.write("HELLOAGAIN")
     while True:
 	sendPix(ser, payload)
 	reciv = receiveX(ser, [startX, acknow, burn, endX] )
@@ -164,13 +164,20 @@ def logicFlow(ser, payload):
 
 
 def rpSerialManager(q, ser):
-    print "HII"
     pixCount = 0
     i = 0
+    connected = False
+    while not connected:
+	serin = ser.read()
+	connected = True
+    ser.write("HSDF")
+
+    ser.write("HEN")
     while (i < 5):
         time.sleep(2)
 	i += 1
 	while not q.empty():
+	    print "HII"
 	    payload = q.get()
 	    logicFlow(ser, payload)
 	    pixCount += 1

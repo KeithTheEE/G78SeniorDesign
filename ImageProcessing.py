@@ -215,8 +215,6 @@ def edQ(imagA, q, levels, printq):
 
 # *************************************************************************
 
-
-
 # *************************************************************************
 
 def serialManager(q, ser, printq):
@@ -233,7 +231,6 @@ def serialManager(q, ser, printq):
     printq.put(msg)
     pixCount = 0
     i = 0
-
     rpSerial.rpSerialManager(q, ser)
     return
 
@@ -361,7 +358,7 @@ def main():
     pq = Queue.Queue() #print queue
     # Set Serial Ports
     myBaud = 9600
-    myTimeO = 0
+    myTimeO = 0.001
     # Rasp Pi: /dev/ttyAMA0
     # Laptop: check ports: currently ACM0
     defPort = serial_ports()
@@ -379,7 +376,7 @@ def main():
 	serin = ser.read()
 	connected = True
     print "\tSerial Communication Open"
-    #ser.write("Begining Image")
+    ser.write("Begining Image")
 
 
     # Get image from file or camera 
@@ -405,15 +402,15 @@ def main():
 	threadPop.stop()
 	threadSerial.stop()
 
-    ser.close()
 
 
     while not q.empty():
 	pass
     time.sleep(10)
 
+    ser.close()
     
-    
+    return
 
 
 

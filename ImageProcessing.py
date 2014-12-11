@@ -235,7 +235,8 @@ def serialManager(q, ser, printq):
     printq.put(msg)
     pixCount = 0
     i = 0
-    rpSerial.rpSerialManager(q, ser)
+    while not q.empty():
+	rpSerial.rpSerialManager(q, ser)
     return
 
    
@@ -383,7 +384,7 @@ def main():
 	serin = ser.read()
 	connected = True
     print "\tSerial Communication Open"
-    ser.write("Begining Image")
+    #ser.write("Begining Image")
 
 
     # Get image from file or camera 

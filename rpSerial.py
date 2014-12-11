@@ -333,9 +333,9 @@ def rpSerialManager(q, ser):
     while not connected:
 	serin = ser.read()
 	connected = True
-    ser.write("HSDF")
+    #ser.write("HSDF")
 
-    ser.write("HEN")
+    #ser.write("HEN")
     while (i < 5):
         time.sleep(2)
 	i += 1

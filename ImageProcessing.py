@@ -8,6 +8,7 @@ import Queue
 import serial
 import sys
 import rpSerial
+import glob
 
 '''
 G78 Senior Design Project:
@@ -49,39 +50,69 @@ resize options:
 
 '''
 class populateEDQueueThread(threading.Thread):
-    def __init__(self, imagA, q, levels):
+    def __init__(self, imagA, q, levels, pq):
 	threading.Thread.__init__(self)
 	self.name = "EDImagePop"
-	#self.daemon = True
+	self.daemon = True
 	self.q = q
 	self.imagA = imagA
 	self.levels = levels
+	self.pq = pq
     def run(self):
-	print "Starting To find pixles"
-	edQ(self.imagA, self.q, self.levels)
+	self.pq.put(("M", "Starting To find pixles"))
+	edQ(self.imagA, self.q, self.levels, self.pq)
+    def stop(self):
+	self._stop.set()
+    def stopped(self):
+	return self._stop.isSet()
 
 class populateRasterQueueThread(threading.Thread):
-    def __init__(self, imagA, q, levels):
+    def __init__(self, imagA, q, levels, pq):
 	threading.Thread.__init__(self)
 	self.name = "RASTERImagePop"
-	#self.daemon = True
+	self.daemon = True
 	self.q = q
 	self.imagA = imagA
 	self.levels = levels
+	self.pq = pq
     def run(self):
-	print "Starting To find pixles"
-	rasterQ(self.imagA, self.q, self.levels)
+	self.pq.put(("M", "Starting To find pixles"))
+	rasterQ(self.imagA, self.q, self.levels, self.pq)
+    def stop(self):
+	self._stop.set()
+    def stopped(self):
+	return self._stop.isSet()
 
 class serialManagerThread(threading.Thread):
-    def __init__(self, q, ser):
+    def __init__(self, q, ser, pq):
 	threading.Thread.__init__(self)
 	self.name = "Serial"
-	#self.daemon = True
+	self.daemon = True
 	self.q = q
 	self.ser = ser
+	self.pq = pq
     def run(self):
-	print "Starting serial communication"
-	serialManager(self.q, self.ser)
+	self.pq.put(("M", "Starting serial communication"))
+	serialManager(self.q, self.ser, self.pq)
+    def stop(self):
+	self._stop.set()
+    def stopped(self):
+	return self._stop.isSet()
+
+class printQueueThread(threading.Thread):
+    def __init__(self, q, mode):
+	threading.Thread.__init__(self)
+	self._stop = threading.Event()
+	self.name = "SerialPrinter"
+	self.q = q
+	self.daemon = True
+	self.mode = mode
+    def run(self):
+	justPrintIt(self.q, self.mode)
+    def stop(self):
+	self._stop.set()
+    def stopped(self):
+	return self._stop.isSet()
 
 def getLevel(pixel, levels):
     value = len(levels)
@@ -106,7 +137,7 @@ def buildpayload(value, xLoc, yLoc, keepOnFlag):
     '''
     # Recieve
 Start : 0x02
-Acknow	0xAA
+Acknow	0x06
 Command	0x0B
 ETx	0x03
 
@@ -144,12 +175,14 @@ End	0x03
     #print int(payload)
     return payload
 
-def rasterQ(imagA, q, levels):
-    print "Temp, rasterQ"
+def rasterQ(imagA, q, levels, printq):
+    msg = ("M", "Temp, rasterQ")
+    printq.put(msg)
     xSize = len(imagA[0])
     ySize = len(imagA)
     leftToRight = True
-    print xSize," ", ySize
+    msg = ("M", (str(xSize) +" " + str(ySize)))
+    printq.put(msg)
     skippedPix = 0
     for i in range(xSize):
 	for j in range(ySize):
@@ -171,14 +204,22 @@ def rasterQ(imagA, q, levels):
 		skippedPix += 1
 	leftToRight = not leftToRight
     #print "Skippied Pix ", skippedPix
-    print "Done Processing Image: Queue fully populated"
+    msg = ("M", "Done Processing Image: Queue fully populated")
+    printq.put(msg)
     return
 
-def edQ(imagA, q, levels):
+def edQ(imagA, q, levels, printq):
     print "Temp, edQ"
     return
 
-def serialManager(q, ser):
+
+# *************************************************************************
+
+
+
+# *************************************************************************
+
+def serialManager(q, ser, printq):
     # Open Serial Communication
     # Send (0,0) coordinate, 
     #   Wait for confimation of recieve
@@ -188,46 +229,13 @@ def serialManager(q, ser):
     #   Verify Queue is done (check to see that neither
     #		rasterQ nor edQ threads are running)
     # Close Serail Comm
-
-
-    # Startx: 0x02
-    # Command: 0x0B
-    # Payload 0xNNNNNNNN
-    # Checksum 0xNN
-    # EndX: 0x03
-    '''
-    # Recieve
-Start : 0x02
-Acknow	0xAA
-Command	0x0B
-ETx	0x03
-
-
-    # Ready for more
-Start	0x02
-SendM	0x1B
-End	0x03
-
-    # Pi will respond
-	0x02
-	0x1B
-	0x3
-    ''' 
-    print "Starting Serial"
+    msg = ("M", "Starting Serial")
+    printq.put(msg)
     pixCount = 0
     i = 0
-    while (i < 5):
-        time.sleep(10)
-	i += 1
-	while not q.empty():
-	    payload = q.get()
-	    print "\t[Queue]->", int(payload)
-	    rpSerial.sendPix(ser, payload)
-	    pixCount += 1
-	    time.sleep(.0001)
-	    q.task_done()
-	    i = 0
-    print "DONE ", pixCount," ", pixCount/1200
+
+    rpSerial.rpSerialManager(q, ser)
+    return
 
    
 
@@ -277,6 +285,68 @@ def edgeDetectImage(myImg, size):
     #imag = Image.fromarray(myA)
     #imag.save(str(folder)+"Filtered"+str(level)+".png")
     return myA
+
+def justPrintIt(q, mode):
+    i = 3
+    recentMessage = False
+    while True:
+	if not q.empty():
+	    msg = q.get()
+	    if ((msg[0] == 'E') or (msg[0] == 'M')):
+		sys.stdout.write(str(msg[1]))
+		sys.stdout.write("\n")
+	    else:
+		msg = msg[1]
+		if (mode == 's'):
+		    sys.stdout.write(str(msg))
+		elif (mode == 'b'):
+		    binMsg = "".join("{:08b}".format(ord(c), 'b') for c in str(msg))
+		    sys.stdout.write(str(binMsg))
+		    sys.stdout.write(":")
+		elif (mode == 'h'):
+		    hexMsg = ":".join("{:02x}".format(ord(c)) for c in str(msg))
+		    sys.stdout.write(str(hexMsg))
+		    sys.stdout.write(":")
+		recentMessage = True
+	    q.task_done()
+	    i = 0
+	else:
+	    time.sleep(0.01)
+	    i += 1
+	    if( (recentMessage == True) and (i > 3)):
+		recentMessage = False
+		i = 0
+		sys.stdout.write("\n")
+
+def serial_ports():
+    """
+	http://stackoverflow.com/questions/12090503
+	    Author: http://stackoverflow.com/users/300783/thomas
+	Lists serial ports
+    :raises EnvironmentError:
+        On unsupported or unknown platforms
+    :returns:
+        A list of available serial ports
+    """
+    if sys.platform.startswith('win'):
+        ports = ['COM' + str(i + 1) for i in range(256)]
+    elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+        # this is to exclude your current terminal "/dev/tty"
+        ports = glob.glob('/dev/tty[A-Za-z]*')
+    elif sys.platform.startswith('darwin'):
+        ports = glob.glob('/dev/tty.*')
+    else:
+        raise EnvironmentError('Unsupported platform')
+    result = []
+    for port in ports:
+        try:
+            s = serial.Serial(port)
+            s.close()
+            result.append(port)
+        except (OSError, serial.SerialException):
+            pass
+    return result
+
     
 def main():
     raster = 0
@@ -288,44 +358,55 @@ def main():
     size = (128, 128)
     # Set Queue
     q = Queue.Queue()
+    pq = Queue.Queue() #print queue
     # Set Serial Ports
     myBaud = 9600
-    myTimeO = 10
+    myTimeO = 0
     # Rasp Pi: /dev/ttyAMA0
     # Laptop: check ports: currently ACM0
-    ser = serial.Serial("/dev/ttyAMA0", baudrate = myBaud, timeout = myTimeO)
+    defPort = serial_ports()
+    if (len(defPort) > 1):
+	defPort = defPort[1]
+    elif (len(defPort) > 0):
+	defPort = defPort[0]
+    else:
+	defPort = "/dev/ttyACM0"
+	print "Couldn't find a valid port"
+    ser = serial.Serial(defPort, baudrate = myBaud, timeout = myTimeO)
     connected = False 
     print "Opening Serial Port Communication"
     while not connected:
 	serin = ser.read()
 	connected = True
     print "\tSerial Communication Open"
-    ser.write("A")
-
+    #ser.write("Begining Image")
 
 
     # Get image from file or camera 
-    myImg = "faceAndSuit.png"
+    #myImg = "faceAndSuit.png"
     myImg = "pumpkins01.png"
 
+    printThread = printQueueThread(pq, "h")
+    threadSerial = serialManagerThread(q, ser, pq)
     # Get matrix for image
     if (mode == 1):
 	myA = edgeDetectImage(myImg, size)
-	threadPop = populateEDQueueThread(myA, q, thresholdLevels)
-	threadSerial = serialManagerThread(q, ser)
-	threadPop.start()
-	threadSerial.start()
+	threadPop = populateEDQueueThread(myA, q, thresholdLevels, pq)
     elif (mode == 0):
 	myA = rasterImage(myImg, size)
-	threadPop = populateRasterQueueThread(myA, q, thresholdLevels)
-	threadSerial = serialManagerThread(q, ser)
+	threadPop = populateRasterQueueThread(myA, q, thresholdLevels, pq)
+
+    try:
+	printThread.start()
 	threadPop.start()
 	threadSerial.start()
+    except(KeyboardInterrupt, SystemExit):
+	printThread.stop()
+	threadPop.stop()
+	threadSerial.stop()
 
-    # send Start Image Command to uC
+    ser.close()
 
-
-    # begin image processing & serial
 
     while not q.empty():
 	pass

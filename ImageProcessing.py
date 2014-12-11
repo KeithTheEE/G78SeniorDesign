@@ -401,6 +401,7 @@ def main():
 	#printThread.stop()
 	#threadPop.stop()
 	#threadSerial.stop()
+	print "TOO BAD"
 
 
 

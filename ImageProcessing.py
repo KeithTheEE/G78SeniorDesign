@@ -53,7 +53,7 @@ class populateEDQueueThread(threading.Thread):
     def __init__(self, imagA, q, levels, pq):
 	threading.Thread.__init__(self)
 	self.name = "EDImagePop"
-	#self.daemon = True
+	self.daemon = True
 	self.q = q
 	self.imagA = imagA
 	self.levels = levels
@@ -70,7 +70,7 @@ class populateRasterQueueThread(threading.Thread):
     def __init__(self, imagA, q, levels, pq):
 	threading.Thread.__init__(self)
 	self.name = "RASTERImagePop"
-	#self.daemon = True
+	self.daemon = True
 	self.q = q
 	self.imagA = imagA
 	self.levels = levels
@@ -87,7 +87,7 @@ class serialManagerThread(threading.Thread):
     def __init__(self, q, ser, pq):
 	threading.Thread.__init__(self)
 	self.name = "Serial"
-	#self.daemon = True
+	self.daemon = True
 	self.q = q
 	self.ser = ser
 	self.pq = pq
@@ -105,7 +105,7 @@ class printQueueThread(threading.Thread):
 	self._stop = threading.Event()
 	self.name = "SerialPrinter"
 	self.q = q
-	#self.daemon = True
+	self.daemon = True
 	self.mode = mode
     def run(self):
 	justPrintIt(self.q, self.mode)
@@ -206,10 +206,14 @@ def rasterQ(imagA, q, levels, printq):
     #print "Skippied Pix ", skippedPix
     msg = ("M", "Done Processing Image: Queue fully populated")
     printq.put(msg)
+    while not q.empty():
+	time.sleep(1)
     return
 
 def edQ(imagA, q, levels, printq):
     print "Temp, edQ"
+    while not q.empty():
+	time.sleep(1)
     return
 
 
@@ -314,6 +318,9 @@ def justPrintIt(q, mode):
 		recentMessage = False
 		i = 0
 		sys.stdout.write("\n")
+    while not q.empty():
+	time.sleep(1)
+    return
 
 def serial_ports():
     """
@@ -398,10 +405,10 @@ def main():
 	threadPop.start()
 	threadSerial.start()
     except(KeyboardInterrupt, SystemExit):
-	#printThread.stop()
-	#threadPop.stop()
-	#threadSerial.stop()
-	print "TOO BAD"
+	print "Shutting Down"
+	printThread.stop()
+	threadPop.stop()
+	threadSerial.stop()
 
 
 

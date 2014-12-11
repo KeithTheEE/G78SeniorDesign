@@ -4,6 +4,7 @@ import time
 import serial
 import threading
 import Queue
+import sys
 import serial
 '''
 Raspberry Pi Serial module 
@@ -199,7 +200,7 @@ def sendX(ser, messages):
     try:
 	ser.write(str(messages))
     except:
-	print "Failed to send\t\trpSerial.sendX"
+	print "Failed to send\t", messages, "\trpSerial.sendX"
 	return 1
     return 0
 
@@ -208,6 +209,7 @@ def receiveX(ser, expectations):
     i = 0
     msgD = {}
     msgArray = []
+    anything = False
     while True:
 	try:
 	    msg = ser.read()
@@ -222,6 +224,9 @@ def receiveX(ser, expectations):
 	    print "In: \t", (str(msg))
 	    msgD[msg] = 1
 	    i = 0
+	    anything = True
+    if (anything == False):
+	return 2
     for j in range(len(expectations)):
 	if expectations[j] not in msgD:
 	    print msgArray
@@ -274,25 +279,45 @@ def sendPix(ser, payload):
     sendX(ser, checksum)
     sendX(ser, endX)
     reciv = receiveX(ser, [startX, acknow, burn, endX] )
-    print "Recieved\t", reciv
+    #print "Recieved\t", reciv
 
     return 
 
 def logicFlow(ser, payload):
     maxWait = 5
-    ser.write("HELLOAGAIN")
+    startTime = time.clock()
+    anything = False
     while True:
 	sendPix(ser, payload)
+	#print (time.clock() - startTime)
 	reciv = receiveX(ser, [startX, acknow, burn, endX] )
 	if reciv == 0:
 	    break
+	if (reciv != 2):
+	    anything = True
+	if ((time.clock() - startTime) > maxWait):
+	    if (anything == False):
+		print "Communication Lost"
+		sys.exit()
+		break
+	    # in the last five seconds we got something, try again
+	    anything = False
+	    startTime = time.clock()
     startTime = time.clock()
     while True:
 	reciv = receiveX(ser, [startX, readyB, endX] )
 	if reciv == 0:
 	    break
-	if ((1000*(time.clock() - startTime)) > maxWait):
-	    break
+	if (reciv != 2):
+	    anything = True
+	if ((time.clock() - startTime) > maxWait):
+	    if (anything == False):
+		print "Communication Lost"
+		#sys.exit()
+		break
+	    # in the last five seconds we got something, try again
+	    anything = False
+	    startTime = time.clock()
     sendX(ser, startX)
     sendX(ser, readyB)
     sendX(ser, endX)

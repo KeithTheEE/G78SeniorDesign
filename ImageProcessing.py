@@ -369,7 +369,7 @@ def main():
     q = Queue.Queue()
     pq = Queue.Queue() #print queue
     # Set Serial Ports
-    myBaud = 9600
+    myBaud = 115200
     myTimeO = 0.001
     # Rasp Pi: /dev/ttyAMA0
     # Laptop: check ports: currently ACM0

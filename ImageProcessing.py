@@ -50,6 +50,7 @@ resize options:
 
 '''
 Qdone = False
+Sdone = False
 class populateEDQueueThread(threading.Thread):
     def __init__(self, imagA, q, levels, pq):
 	threading.Thread.__init__(self)
@@ -210,11 +211,16 @@ def rasterQ(imagA, q, levels, printq):
     Qdone = True
     while not q.empty():
 	time.sleep(1)
+    while not Sdone:
+	time.sleep(1)
+
     return
 
 def edQ(imagA, q, levels, printq):
     print "Temp, edQ"
     while not q.empty():
+	time.sleep(1)
+    while not Sdone:
 	time.sleep(1)
     return
 
@@ -238,9 +244,18 @@ def serialManager(q, ser, printq):
     pixCount = 0
     i = 0
     while not Qdone:
-	rpSerial.rpSerialManager(q, ser)
-    rpSerial.rpSerialManager(q, ser)
-
+	check = rpSerial.rpSerialManager(q, ser)
+	if check == 1:
+	    print "HERE"
+	    Sdone = True
+	    q.queue.clear()
+	    #sys.exit('s')
+	    break
+    print "Sdone", Sdone
+    if (Sdone != True):
+	check = rpSerial.rpSerialManager(q, ser)
+    Sdone = True
+    print "Sdone", Sdone
     return
 
    
@@ -325,6 +340,8 @@ def justPrintIt(q, mode):
 		sys.stdout.write("\n")
     while not q.empty():
 	time.sleep(1)
+    while not Sdone:
+	time.sleep(1)
     return
 
 def serial_ports():
@@ -370,7 +387,7 @@ def main():
     pq = Queue.Queue() #print queue
     # Set Serial Ports
     myBaud = 115200
-    myTimeO = 0.001
+    myTimeO = 0
     # Rasp Pi: /dev/ttyAMA0
     # Laptop: check ports: currently ACM0
     defPort = serial_ports()
@@ -414,15 +431,23 @@ def main():
 	printThread.stop()
 	threadPop.stop()
 	threadSerial.stop()
+	ser.close()
 
+   # print "EHEHH"
+    while not Sdone:
+	time.sleep(1)
+	print Sdone
 
-
+    print "EHEHsdfH"
     while not q.empty():
+	time.sleep(1)
 	pass
+    print "EHEH245H"
     time.sleep(10)
 
     ser.close()
-    
+
+
     return
 
 

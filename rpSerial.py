@@ -57,6 +57,13 @@ esc 	= 0x1B
 error	= 0x3f
 readyB 	= 0x4d
 
+startXc 	= "0x02"
+endXc 		= "0x03"
+acknowc 	= "0x06"
+burnc 		= "0x0B"
+escc		= "0x1B"
+errorc		= "0x3f"
+readyBc 	= "0x4d"
 
 def hexParse(rawMsg):
     # Parsing
@@ -192,11 +199,13 @@ def hexParse(rawMsg):
 
 	
     hexMsg = "".join(chr(x) for x in byteArr)
+    #print hexMsg
     return hexMsg
 
 
 def sendX(ser, messages):
-    messages = hexParse(str(messages))
+    #messages = hexParse(str(messages))
+    #print str(messages)
     try:
 	ser.write(str(messages))
     except:
@@ -220,8 +229,9 @@ def receiveX(ser, expectations):
 	    if (i >= 10):
 		break
 	else :
-	    msgArray.append(msg)
-	    print "In: \t", (str(msg))
+	    hexM = ":".join("{:02x}".format(ord(c)) for c in str(msg))
+	    msgArray.append(hexM)
+	    #print "In: \t", (str(msg))
 	    msgD[msg] = 1
 	    i = 0
 	    anything = True
@@ -229,9 +239,9 @@ def receiveX(ser, expectations):
 	return 2
     for j in range(len(expectations)):
 	if expectations[j] not in msgD:
-	    print msgArray
+	    #print msgArray
 	    return 1
-    print "MSG ARR", msgArray
+    #print "MSG ARR", msgArray
     return 0
 
 
@@ -262,23 +272,28 @@ def checkSum8(payload):
     
     checkSum = 256 - ((byte4 + byte3 + byte2 + byte1) & 0x00FF)
     if (checkSum in specialChar):
+	msgA.append(esc)
 	checkSum = (esc << 8) | checkSum
+    msgA.append(checkSum & 0xff)
+    #print hex(payload), hex(checkSum), hex(byte4),hex(byte3),hex(byte2),hex(byte1)
 
-    return msgA, checkSum
+    # I hate doing this, it's ugly, but it will get this to work
+    #for i in range(len(msgA))
+
+    return msgA
 
 def sendPix(ser, payload):
     checksum = 0x00
     #checksum32 = zlib.adler32(str(payload))
     #checksum = checksum | (checksum32 & 0x000000FF)
-    payloadAr, checksum = checkSum8(payload)
-    
-    sendX(ser, startX)
-    sendX(ser, burn)
-    for i in range(len(payloadAr)):
-	sendX(ser, payloadAr[i])
-    sendX(ser, checksum)
-    sendX(ser, endX)
-    reciv = receiveX(ser, [startX, acknow, burn, endX] )
+    payloadAr = checkSum8(payload)
+    #print payload
+    sendX(ser, chr(startX))
+    sendX(ser, chr(burn))
+    hexMsg = "".join(chr(x) for x in payloadAr)
+    sendX(ser, hexMsg)
+    sendX(ser, chr(endX))
+    #reciv = receiveX(ser, [startX, acknow, burn, endX] )
     #print "Recieved\t", reciv
 
     return 
@@ -287,41 +302,48 @@ def logicFlow(ser, payload):
     maxWait = 5
     startTime = time.clock()
     anything = False
+    print "Payload"
     while True:
 	sendPix(ser, payload)
+	#print payload
 	#print (time.clock() - startTime)
-	reciv = receiveX(ser, [startX, acknow, burn, endX] )
+	reciv = receiveX(ser, [chr(startX), chr(acknow), chr(burn), chr(endX), chr(readyB)] )
 	if reciv == 0:
 	    break
 	if (reciv != 2):
+	    #print reciv
 	    anything = True
 	if ((time.clock() - startTime) > maxWait):
 	    if (anything == False):
 		print "Communication Lost"
-		sys.exit()
-		break
-	    # in the last five seconds we got something, try again
-	    anything = False
-	    startTime = time.clock()
-    startTime = time.clock()
-    while True:
-	reciv = receiveX(ser, [startX, readyB, endX] )
-	if reciv == 0:
-	    break
-	if (reciv != 2):
-	    anything = True
-	if ((time.clock() - startTime) > maxWait):
-	    if (anything == False):
-		print "Communication Lost"
+		return 1
 		#sys.exit()
 		break
 	    # in the last five seconds we got something, try again
 	    anything = False
 	    startTime = time.clock()
-    sendX(ser, startX)
-    sendX(ser, readyB)
-    sendX(ser, endX)
-    return
+    startTime = time.clock()
+    print "waiting"
+    while True:
+	#reciv = receiveX(ser, [chr(startX), chr(readyB), chr(endX)] )
+	reciv = 0
+	if reciv == 0:
+	    break
+	if (reciv != 2):
+	    anything = True
+	if ((time.clock() - startTime) > maxWait):
+	    if (anything == False):
+		print "Communication Lost"
+		return 1
+		#sys.exit()
+		break
+	    # in the last five seconds we got something, try again
+	    anything = False
+	    startTime = time.clock()
+    sendX(ser, chr(startX))
+    sendX(ser, chr(readyB))
+    sendX(ser, chr(endX))
+    return 0
     
 
 
@@ -333,6 +355,8 @@ def rpSerialManager(q, ser):
     while not connected:
 	serin = ser.read()
 	connected = True
+    receiveX(ser, [chr(startX), chr(error), chr(endX)])
+    
     #ser.write("HSDF")
 
     #ser.write("HEN")
@@ -340,14 +364,18 @@ def rpSerialManager(q, ser):
         time.sleep(2)
 	i += 1
 	while not q.empty():
-	    print "HII"
 	    payload = q.get()
-	    logicFlow(ser, payload)
+	    check = logicFlow(ser, payload)
+	    if check == 1:
+		print "HALLO"
+		return 1
 	    pixCount += 1
 	    q.task_done()
+	    print pixCount, q.qsize(), q.empty()
 	    i = 0
+    print "*******************************"
     print "DONE ", pixCount," ", pixCount/1200
-
+    return 0
    
 
 

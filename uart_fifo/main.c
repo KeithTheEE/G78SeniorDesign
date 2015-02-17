@@ -7,37 +7,59 @@ char test_string[8];
 #define LED BIT0
 
 int test;
+extern volatile unsigned char packet_ready;
+extern volatile unsigned char burn_ready;
 
 int main(void)
 {
-	// Setup DCO (will be used as source to SMCLK, which in turn will be used as source to BRCLK)
-	// TODO: move into own function (perhaps in clock file?)
-	WDTCTL = WDTPW+WDTHOLD;                 // Stop WDT
-	UCSCTL3 |= SELREF_2;                    // Set DCO FLL reference = REFO
-	UCSCTL4 |= SELA_2;                      // Set ACLK = REFO
-	__bis_SR_register(SCG0);                // Disable the FLL control loop
-	UCSCTL0 = 0x0000;                       // Set lowest possible DCOx, MODx
-	UCSCTL1 = DCORSEL_5;                    // Select DCO range 24MHz operation
-	UCSCTL2 = FLLD_1 + 374;                	// Set DCO Multiplier for 12MHz
-											// (N + 1) * FLLRef = Fdco
-											// (374 + 1) * 32768 = 12.28MHz
-											// Set FLL Div = fDCOCLK/2
-	__bic_SR_register(SCG0);                  // Enable the FLL control loop
-
-
-
+	setup_clocks();
     uart_init();						//Initialize the UART connection
 
-    __enable_interrupt();				//Interrupts Enabled
 
-    // Delay (not exactly sure why necessary, but first few bytes are gibberish if not added)
-    // TODO: timer delay
-    volatile int i = 50000; // Delay to Test the FIFO
-	while (i != 0)
+
+	burn_ready = 0;
+
+
+	while( 1 )
 	{
-		i--;
+		struct TPacket_Data rx_data;
+		check_and_respond_to_msg( &rx_data );
+
+		if( burn_ready == 1 ) { respond_to_burn_cmd( rx_data.data ); }
+
+		/*if( packet_ready == 1 )
+		{
+			unsigned char rx_packet[MAX_PACKET_LENGTH];
+
+			struct TPacket_Data rx_data;
+			rx_data.data_size = 4;
+			unsigned int rec_size = uart_getp( rx_packet, MAX_PACKET_LENGTH );
+			if( parse_rx_packet( rx_packet, MAX_PACKET_LENGTH, &rx_data ) == 0 )
+			{
+				struct TPacket_Data tx_data;
+				tx_data.command = rx_data.command;
+				tx_data.ack = CMD_ACK;
+				tx_data.data_size = 0;
+
+				unsigned char tx_buff[MAX_PACKET_LENGTH];
+				unsigned int tx_length = pack_tx_packet( tx_data, tx_buff );
+				uart_putp( tx_buff, tx_length );
+			}
+			else
+			{
+				uart_putc( 'e' );
+			}
+		}*/
 	}
 
+	return 0;
+}
+
+
+
+
+// Test uart code
+/*
     uart_puts((char *)"This is a Test of the MSP-430\n\r");
 
     uart_puts((char *)"PRESS any key to start the test... ");
@@ -48,6 +70,49 @@ int main(void)
     uart_putc(c);
 
     uart_puts((char *)"\n\rTest OK!\n\r");
+
+    for( i = 0; i < 256; i++ )
+    {
+    	//uart_putc(48 + (i %10));
+    	//uart_putc('.');
+    	//uart_putc(i);
+    	//uart_putc('|');
+
+    	//unsigned char send_msg[3];
+    	//send_msg[0] = i;
+    	//send_msg[1] = ETX;
+    	//if( i == ETX || i == ESC )
+    	//{
+    	//	send_msg[0] = 0x1B;
+    	//	send_msg[1] = i;
+    	//	send_msg[2] = 0x03;
+    	//}
+
+
+    	unsigned char rec_packet[1024];
+    	unsigned int size = uart_getp( rec_packet, 1024 );
+    	//uart_putp( &size, 1/*size*//* );
+    	uart_putp( rec_packet, size );
+
+
+
+    	//c = uart_getc( );
+    	//unsigned char c2 = uart_getc( );
+    	//unsigned char c3 = uart_getc( );
+    	//unsigned char c4 = uart_getc( );
+		//uart_putc( c );
+		//uart_putc( c2 );
+		//uart_putc( c3 );
+		//uart_putc( c4 );
+
+		if( c == 0x1B && c2 == 8 && c3 == ETX && c4 == 0x04 ) { P1OUT |= LED; }
+
+
+    	//unsigned char rec_packet[1024];
+    	//unsigned int size = uart_getp( rec_packet, 1024 );
+    	//uart_putp( rec_packet, size );
+    	//uart_puts((char *)"\n\r");
+    }
 
     //volatile unsigned long i;
     while(1)
@@ -64,6 +129,6 @@ int main(void)
     	uart_putc(uart_getc());
     	uart_putc(uart_getc());
     	uart_gets(test_string,8);
-    	uart_puts(test_string);
+    	uart_putp(test_string, 8);
     }
-}
+ */

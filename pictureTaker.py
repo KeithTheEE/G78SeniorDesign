@@ -11,9 +11,9 @@ from time import sleep
 def takePic():
     img = 'template.png'
     camera = picamera.PiCamera()
-    camera.start_preview()
-    sleep(3)
-    camera.stop_preview()
+    #camera.start_preview()
+    #sleep(3)
+    #camera.stop_preview()
     camera.capture(img)
     return img
     

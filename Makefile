@@ -12,7 +12,6 @@
 all:
 	sudo apt-get update
 	sudo apt-get install python-dev
-	sudo easy_install -U distribute
 	sudo apt-get install python-pip
 	sudo apt-get install python-serial
 	sudo apt-get install python-rpi.gpio python3-rpi.gpio

@@ -9,6 +9,8 @@ import serial
 import sys
 import rpSerial
 import glob
+import picamera
+from time import sleep
 
 '''
 G78 Senior Design Project:
@@ -17,7 +19,8 @@ payloads for the raspberry pi:
     sudo apt-get install python-dev
     sudo easy_install -U distribute
     sudo apt-get install python-pip
-    sudo pip install rpi.gpio
+    sudo apt-get update
+    sudo apt-get install python-rpi.gpio python3-rpi.gpio
     sudo pip install serial
     X Ignore this, causes error, see below X: sudo pip install PIL
 
@@ -30,7 +33,7 @@ payloads for the raspberry pi:
     sudo ./ImageProcessing.py > raspberryPiError.txt 2>&1
     Error removed:
 	sudo pip uninstall PIL
-	sudo pip install pillow
+    sudo pip install pillow
 
     sudo shutdown -h now
 
@@ -48,10 +51,42 @@ resize options:
     	ANTIALIAS
 
 
+Updates to team charter
+  -more skill sets
+  -roughly what you're responsible for
+  -Product Spec
+Time line
+  -Crude timeline and details wanted (it's got a lot of duplicate data from 494
+  -More rambling with little info
+  -He'll use timeline to negoate 
+
+
+2 weeks to get board back
+Ground and power for each header?
+He really doesn't check any of this. He has no idea what's going on with us, or any group
+woo finally example electronic entry pdf
+
+
+
 '''
+# this is used to make sure the threads stay active as long as 
+#   there is still data to transmit
 Qdone = False
 Sdone = False
+
+# Threading classes:
+# Each thread has a few internal funcitons,
+# the __init__, run, stop, and stopped
+# init sets all needed varibles, and ensures
+#   the run class has all needed attributes 
+# run executes a function or series of functions
+# stop kills the thread
+# stopped is used to verify that the thread is done
+#   Stop and Stopped are needed to allow ctrl+c to 
+#   kill the program, making debugging simpler
+
 class populateEDQueueThread(threading.Thread):
+    # Handles the basic 'edge detection' algorithm
     def __init__(self, imagA, q, levels, pq):
 	threading.Thread.__init__(self)
 	self.name = "EDImagePop"
@@ -69,6 +104,8 @@ class populateEDQueueThread(threading.Thread):
 	return self._stop.isSet()
 
 class populateRasterQueueThread(threading.Thread):
+    # Used in place of basic edge detect,
+    #   This does raster image processing
     def __init__(self, imagA, q, levels, pq):
 	threading.Thread.__init__(self)
 	self.name = "RASTERImagePop"
@@ -86,6 +123,7 @@ class populateRasterQueueThread(threading.Thread):
 	return self._stop.isSet()
 
 class serialManagerThread(threading.Thread):
+    # Handles serial communication between Pi and MSP
     def __init__(self, q, ser, pq):
 	threading.Thread.__init__(self)
 	self.name = "Serial"
@@ -102,6 +140,8 @@ class serialManagerThread(threading.Thread):
 	return self._stop.isSet()
 
 class printQueueThread(threading.Thread):
+    # Exists to make print statements that don't get
+    #   interrupted by multithreading
     def __init__(self, q, mode):
 	threading.Thread.__init__(self)
 	self._stop = threading.Event()
@@ -117,6 +157,7 @@ class printQueueThread(threading.Thread):
 	return self._stop.isSet()
 
 def getLevel(pixel, levels):
+    # takes a pixel input, and returns the laser intensity
     value = len(levels)
     for i in range(len(levels)):
 	if (pixel < levels[i]):
@@ -178,7 +219,7 @@ End	0x03
     return payload
 
 def rasterQ(imagA, q, levels, printq):
-    msg = ("M", "Temp, rasterQ")
+    msg = ("M", "Running RASTER")
     printq.put(msg)
     xSize = len(imagA[0])
     ySize = len(imagA)
@@ -217,7 +258,7 @@ def rasterQ(imagA, q, levels, printq):
     return
 
 def edQ(imagA, q, levels, printq):
-    print "Temp, edQ"
+    print "Running EDGE DETECT"
     while not q.empty():
 	time.sleep(1)
     while not Sdone:
@@ -374,12 +415,11 @@ def serial_ports():
     return result
 
     
-def main():
+def main(myImg, thresholdLevels):
     raster = 0
     edgeDetect = 1
     mode = raster
     # Set Thresholds 
-    thresholdLevels = [75, 110, 180, 225]
     # Set Size
     size = (128, 128)
     # Set Queue
@@ -410,7 +450,7 @@ def main():
 
     # Get image from file or camera 
     #myImg = "faceAndSuit.png"
-    myImg = "pumpkins01.png"
+    #myImg = "pumpkins01.png"
 
     printThread = printQueueThread(pq, "h")
     threadSerial = serialManagerThread(q, ser, pq)
@@ -453,11 +493,53 @@ def main():
 
 
 
+thresholdLevels = [75, 110, 180, 225]
+myImg = "pumpkins01.png"
 
-main()
+
+def takePic():
+    img = 'template.png'
+    camera = picamera.PiCamera()
+    camera.start_preview()
+    sleep(3)
+    camera.capture(img)
+    camera.stop_preview()
+    return img
+    
+# raspi still -o "filename.jpg"
+img = takePic()
+main(img, thresholdLevels)
+
+
+'''
+Burn Checker board
+blocks of different intensities
+system schem 
+
+turn sys on
+	msp locate self
+	check power
+	check laser
+	safety is good, look at pi
+pi starts
+runs startup
+waits for GPIO trigger for "Start"
+Start Picture Take
+	Take Pic
+	Approve
+Set the Levels
+Approve
+*******************
+End User 
+Start [already built prog]
+End laser burn
+Repeat .... all? or just take pic
 
 
 
+
+
+'''
 
 
 

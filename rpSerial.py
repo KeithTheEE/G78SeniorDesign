@@ -341,6 +341,7 @@ def logicFlow(ser, payload):
 	    anything = False
 	    startTime = time.clock()
     sendX(ser, chr(startX))
+    sendX(ser, chr(acknow))
     sendX(ser, chr(readyB))
     sendX(ser, chr(endX))
     return 0

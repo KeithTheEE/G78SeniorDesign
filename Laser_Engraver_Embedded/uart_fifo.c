@@ -1,8 +1,29 @@
+//============================================================================
+// Project	   : Laser Engraver Embedded
+// Name        : uart_fifo.c
+// Author      : Garin Newcomb
+// Email       : gpnewcomb@live.com
+// Version     : See "Revision History" below
+// Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
+// Description : Source code for uart communication
+//============================================================================
+//
+//  Revision History
+//      v0.0.0 - 2014/10/11 - Garin Newcomb
+//          Initial creation of file
+//
+//    	Appl Version at Last File Update::  v0.0.x - 2015/02/05 - Garin Newcomb
+//      	[Note:  until program released, all files tracking with program revision level -- see "version.h" file]
+//
+//==============================================================================
+
 
 #include <msp430f5529.h>
+#include <stdio.h>
 //#include "customDefs430.h"
 #include "uart_fifo.h"
-#include <stdint.h>
+#include "laser_driver.h"
+
 
 
 volatile unsigned char tx_char;			//This char is the most current char to go into the UART
@@ -25,6 +46,7 @@ volatile unsigned char packet_ip;
 volatile unsigned char packet_ready;
 volatile unsigned char burn_ready = 0;
 
+extern int int_trig;
 
 
 // TODO: move function (perhaps to separate clock file?)
@@ -53,6 +75,16 @@ void setup_clocks( void )
 }
 
 
+void init_LED( void )
+{
+	P1SEL &= ~LED;						// Select I/O
+	P1DIR |=  LED; 						// P1.0 red LED. Toggle when char received.
+	P1OUT &= ~LED; 						// LED off
+
+	return;
+}
+
+
 /*uart_init
 * Sets up the UART interface via USCI
 * INPUT: None
@@ -62,9 +94,6 @@ void uart_init(void)
 {
     P4SEL = (BIT4 | BIT5);				// Setup the port as a peripheral
 
-    P1DIR |= LED; 						// P1.0 red LED. Toggle when char received.
-    P1OUT &= ~LED; 						// LED off
-
 	UCA1CTL1 |= BIT0;					// Hold UART in reset while modifying settings
 
 
@@ -72,7 +101,7 @@ void uart_init(void)
 	UCA1CTL1 |= ( BIT7 | BIT6 );		// Set UART clock to SMCLK
 	UCA1BR0   = 106;
 	UCA1BR1   = 0;
-	UCA1MCTL  = (0 << 4) | (6 << 1) | (0); 			//UCBRFx=0,UCBRSx=6, UCOS16=0
+	UCA1MCTL  = (0 << 4) | (6 << 1) | (0); 			//UCBRFx=0, UCBRSx=6, UCOS16=0
 
 	UCA1CTL1 &= ~(BIT0); 				//USCI state machine - disable software reset capabilities
 	UCA1IE   |= BIT0; 					//Enable USCI_A0 RX interrupt
@@ -97,19 +126,20 @@ void uart_init(void)
 	__enable_interrupt();				//Interrupts Enabled
 
 	// Delay (not exactly sure why necessary, but first few bytes are gibberish if not added)
-	// TODO: timer delay
-	volatile int i = 500000; // Delay to Test the FIFO
+	delay( 20 );
+
+	/*volatile uint32_t i = 500000; // Delay to Test the FIFO
 	while (i != 0)
 	{
 		i--;
-	}
+	}*/
 
 	// Rasperry PI sends random character when setting up uart; read now to avoid
 	//   interference later
 	//   TODO: Make sure the character is sent with Python serial library
-	unsigned char setup_byte;
-	setup_byte = uart_getc();
-	uart_putc( setup_byte );
+	//unsigned char setup_byte;
+	//setup_byte = uart_getc();
+	//uart_putc( setup_byte );
 
 	return;
 }
@@ -119,23 +149,23 @@ void uart_init(void)
 * INPUT: None
 * RETURN: Char from UART
 */
-unsigned char uart_getc()					//Waits for a valid char from the UART
+unsigned char uart_getc()					// Waits for a valid char from the UART
 {
 	unsigned char c;
 
-	while (rx_flag == 0);		 			//Wait for rx_flag to be set
+	while (rx_flag == 0);		 			// Wait for rx_flag to be set
 
-	c = rx_fifo[rx_fifo_ptA];				//Copy the fifo
-	rx_fifo_ptA++;							//increase the fifo pointer
+	c = rx_fifo[rx_fifo_ptA];				// Copy the fifo
+	rx_fifo_ptA++;							// Increase the fifo pointer
 
-	if(rx_fifo_ptA == FIFO_SIZE)			//If pointer is equal to the max size roll it over
+	if(rx_fifo_ptA == FIFO_SIZE)			// If pointer is equal to the max size roll it over
 	{
 		rx_fifo_ptA = 0;
 	}
 
-	if(rx_fifo_ptA == rx_fifo_ptB)			//if the pointers are the same we have no new data
+	if(rx_fifo_ptA == rx_fifo_ptB)			// If the pointers are the same we have no new data
 	{
-		rx_flag = 0;						//ACK rx_flag
+		rx_flag = 0;						// ACK rx_flag
 	}
     return c;
 }
@@ -176,10 +206,28 @@ void uart_gets(char* Array, int length)
 unsigned int uart_getp( unsigned char* packet, int max_length )
 {
 	unsigned int i = 0;
+	unsigned char temp_char;
+	unsigned char message_started = 0;
 	// Grab data till the array fills
 	for( i = 0; i < max_length; i++ )
 	{
-		packet[i] = uart_getc();
+		if( message_started == 0 )
+		{
+			temp_char = uart_getc();
+			if( temp_char == STX )
+			{
+				message_started = 1;
+				packet[i] = temp_char;
+			}
+			else
+			{
+				i--;
+			}
+		}
+		else
+		{
+			packet[i] = uart_getc();
+		}
 
 		//If we receive an unescaped ETX the master wants to end
 		if( packet[i] == ETX )
@@ -193,6 +241,8 @@ unsigned int uart_getp( unsigned char* packet, int max_length )
 			}
 		}
 	}
+
+	printf( "Message Received");
 
     return max_length;
 }
@@ -534,8 +584,31 @@ void send_ack( unsigned char command, unsigned char ack )
 
 void respond_to_burn_cmd( unsigned char * burn_cmd_payload )
 {
-	// Do stuff and things
-	P1OUT ^= LED;
+	// Perform a burn (move laser to position, turn on laser)
+	// TODO: Move Laser
+
+	uint8_t laser_intensity = ( burn_cmd_payload[0] & LASER_INTENSITY_MASK ) >> LASER_INTENSITY_SHIFT;
+
+	switch( laser_intensity )
+	{
+		// laser_intensity = 0 implies a pixel value of 0
+		case 0:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_1 );
+				 break;
+
+		case 1:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_2 );
+				 break;
+
+		case 2:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_3 );
+				 break;
+
+		case 3:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_4 );
+				 break;
+
+		default: break;
+	}
+
+
+	// Reset the tracking variable
 	burn_ready = 0;
 
 	// When done executing the burn, request another command
@@ -610,3 +683,6 @@ __interrupt void USCI0RXTX_ISR(void)
 		}
 	}
 }
+
+
+

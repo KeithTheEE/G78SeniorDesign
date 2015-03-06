@@ -1,24 +1,61 @@
-//#include <msp430g2553.h>
+//============================================================================
+// Project	   : Laser Engraver Embedded
+// Name        : main.c
+// Author      : Garin Newcomb
+// Email       : gpnewcomb@live.com
+// Version     : See "Revision History" below
+// Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
+// Description : Laser Engraver Embedded project 'Main' file, including
+//				 'main()'
+//============================================================================
+//
+//  Revision History
+//      v0.0.0 - 2014/10/11 - Garin Newcomb
+//          Initial creation of file
+//
+//    	Appl Version at Last File Update::  v0.0.x - 2015/02/05 - Garin Newcomb
+//      	[Note:  until program released, all files tracking with program revision level -- see "version.h" file]
+//
+//==============================================================================
+
+
 #include "uart_fifo.h"
+#include "laser_driver.h"
 #include <stdio.h>
 #include "msp430f5529.h"
+//============================================================================
+
 
 char test_string[8];
-#define LED BIT0
 
-int test;
 extern volatile unsigned char packet_ready;
 extern volatile unsigned char burn_ready;
+extern uint32_t time_ms;
+//============================================================================
+
 
 int main(void)
 {
+	init_LED();
 	setup_clocks();
+	initialize_laser();
     uart_init();						//Initialize the UART connection
-
-
 
 	burn_ready = 0;
 
+	// Laser Driver Tests
+	while( 1 )
+	{
+		enable_laser();
+		turn_on_laser_timed( MAX_INTENSITY,   1000 );
+		turn_on_laser_timed( INTENSITY_3,     1000 );
+		turn_on_laser_timed( INTENSITY_2,     1000 );
+		turn_on_laser_timed( INTENSITY_1,     1000 );
+		turn_on_laser_timed( FOCUS_INTENSITY, 1000 );
+
+		disable_laser();
+		delay( 1000 );
+	}
 
 	while( 1 )
 	{
@@ -54,7 +91,7 @@ int main(void)
 
 	return 0;
 }
-
+//============================================================================
 
 
 
@@ -132,3 +169,4 @@ int main(void)
     	uart_putp(test_string, 8);
     }
  */
+//============================================================================

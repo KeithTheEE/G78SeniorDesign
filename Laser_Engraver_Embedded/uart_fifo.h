@@ -1,6 +1,29 @@
+//============================================================================
+// Project	   : Laser Engraver Embedded
+// Name        : uart_fifo.h
+// Author      : Garin Newcomb
+// Email       : gpnewcomb@live.com
+// Version     : See "Revision History" below
+// Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
+// Description : Header file including function prototypes and macros used for
+//				 uart communication
+//============================================================================
+//
+//  Revision History
+//      v0.0.0 - 2014/10/11 - Garin Newcomb
+//          Initial creation of file
+//
+//    	Appl Version at Last File Update::  v0.0.x - 2015/02/05 - Garin Newcomb
+//      	[Note:  until program released, all files tracking with program revision level -- see "version.h" file]
+//
+//==============================================================================
+
+
+
 #ifndef  UART_FIFO_H
 #define  UART_FIFO_H
 
+#include <stdint.h>
 
 #define LED BIT0
 #define RXD BIT1
@@ -64,6 +87,7 @@ extern volatile unsigned int rx_fifo_full;
 extern volatile unsigned int tx_fifo_full;
 
 void setup_clocks( void );
+void init_LED( void );
 void uart_init( void );
 unsigned char uart_getc();
 void uart_gets( char* Array, int length );

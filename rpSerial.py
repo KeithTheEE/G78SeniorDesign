@@ -403,6 +403,7 @@ def logicFlow2(ser, payload):
 	return 1
 
     # Phase 3 0x024d03  MSP<-Pi
+    p3 = 1
     while p3 == 1:
 	p3 = phase3(ser)
         startTime = time.time()

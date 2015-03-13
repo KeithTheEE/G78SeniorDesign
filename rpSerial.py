@@ -349,7 +349,7 @@ def logicFlow(ser, payload):
     sendX(ser, chr(endX))
     return 0
     
-def phase2():
+def phase2(ser):
     maxWait = 5
     reciv = 2 # This is the return val for no serial response
     startTime = time.time()
@@ -367,7 +367,7 @@ def phase2():
 	return 2
 
 
-def phase3():
+def phase3(ser):
     maxWait = 5
     reciv = 2 # This is the return val for no serial response
     startTime = time.time()
@@ -393,7 +393,7 @@ def logicFlow2(ser, payload):
 	# Phase 1 0x02PAYCHECK03 Pi->MSP
         sendPix(ser, payload)
 	# Phase 2 0x02060b03 MSP<-Pi
-	p2 = phase2()
+	p2 = phase2(ser)
         startTime = time.time()
 	if ((time.time() - startTime) > maxWait):
 	    print "P2 took too long"
@@ -404,7 +404,7 @@ def logicFlow2(ser, payload):
 
     # Phase 3 0x024d03  MSP<-Pi
     while p3 == 1:
-	p3 = phase3()
+	p3 = phase3(ser)
         startTime = time.time()
 	if ((time.time() - startTime) > maxWait):
 	    print "P2 took too long"

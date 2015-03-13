@@ -357,7 +357,7 @@ def phase2(ser):
 	reciv = receiveX(ser, [chr(startX), chr(acknow), chr(burn), chr(endX)] )
 	if ((time.time() - startTime) > maxWait):
 	    # I've waited for 5 seconds, I give up
-	    return 2 
+	    #return 2 
     if reciv == 1:
 	# I recieved something, but it wasn't what I wanted
 	return 1
@@ -375,7 +375,7 @@ def phase3(ser):
 	reciv = receiveX(ser, [chr(startX), chr(endX), chr(readyB)] )
 	if ((time.time() - startTime) > maxWait):
 	    # I've waited for 5 seconds, I give up
-	    return 2 
+	    #return 2 
     if reciv == 1:
 	# I recieved something, but it wasn't what I wanted
 	return 1
@@ -397,7 +397,7 @@ def logicFlow2(ser, payload):
         startTime = time.time()
 	if ((time.time() - startTime) > maxWait):
 	    print "P2 took too long"
-	    break
+	    #break
     if p2 == 2:
 	print "Communication Lost"
 	return 1
@@ -409,7 +409,7 @@ def logicFlow2(ser, payload):
         startTime = time.time()
 	if ((time.time() - startTime) > maxWait):
 	    print "P2 took too long"
-	    break
+	    #break
     if p3 == 2:
 	print "Communication Lost"
 	return 1

@@ -295,7 +295,7 @@ def sendPix(ser, payload):
     sendX(ser, chr(endX))
     #reciv = receiveX(ser, [startX, acknow, burn, endX] )
     #print "Recieved\t", reciv
-
+    print format(hexMsg, '02X')
     return 
 
 def logicFlow(ser, payload):
@@ -420,7 +420,6 @@ def logicFlow2(ser, payload):
     sendX(ser, chr(readyB))
     sendX(ser, chr(endX))
     return 0
-
 
 
 def rpSerialManager(q, ser):

@@ -495,7 +495,11 @@ def main(myImg, thresholdLevels):
    # print "EHEHH"
     while not Sdone:
 	time.sleep(1)
-	print "LN 498", Sdone
+	#print "LN 498", Sdone
+	# Turns out, when com fails, it sits here.
+	#   Right here. FOREVER.
+	# DON"T BOTHER PRINTING FROM HERE
+	# ...Also, I'm hungry. import food
 
     print "EHEHsdfH"
     while not q.empty():

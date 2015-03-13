@@ -295,7 +295,6 @@ def sendPix(ser, payload):
     sendX(ser, chr(endX))
     #reciv = receiveX(ser, [startX, acknow, burn, endX] )
     #print "Recieved\t", reciv
-    print hexMsg#format(hexMsg, '02X')
     return 
 
 def logicFlow(ser, payload):

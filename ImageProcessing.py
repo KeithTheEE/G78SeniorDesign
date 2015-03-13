@@ -495,7 +495,7 @@ def main(myImg, thresholdLevels):
    # print "EHEHH"
     while not Sdone:
 	time.sleep(1)
-	print Sdone
+	print "LN 498" Sdone
 
     print "EHEHsdfH"
     while not q.empty():

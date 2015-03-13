@@ -363,7 +363,7 @@ def phase2():
 	return 1
     if reciv == 0:
 	return 0
-    else
+    else:
 	return 2
 
 
@@ -381,7 +381,7 @@ def phase3():
 	return 1
     if reciv == 0:
 	return 0
-    else
+    else:
 	return 2
 
 def logicFlow2(ser, payload):

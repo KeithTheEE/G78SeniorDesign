@@ -300,20 +300,23 @@ def sendPix(ser, payload):
 
 def logicFlow(ser, payload):
     maxWait = 5
-    startTime = time.clock()
+    startTime = time.time()
     anything = False
     print "Payload"
+    waited = 0
     while True:
-	sendPix(ser, payload)
+	if (waited < 1):
+	    sendPix(ser, payload)
+	    waited += 1
 	#print payload
-	#print (time.clock() - startTime)
+	#print (time.time() - startTime)
 	reciv = receiveX(ser, [chr(startX), chr(acknow), chr(burn), chr(endX), chr(readyB)] )
 	if reciv == 0:
 	    break
 	if (reciv != 2):
 	    #print reciv
 	    anything = True
-	if ((time.clock() - startTime) > maxWait):
+	if ((time.time() - startTime) > maxWait):
 	    if (anything == False):
 		print "Communication Lost"
 		return 1
@@ -321,17 +324,17 @@ def logicFlow(ser, payload):
 		break
 	    # in the last five seconds we got something, try again
 	    anything = False
-	    startTime = time.clock()
-    startTime = time.clock()
+	    startTime = time.time()
+    startTime = time.time()
     print "waiting"
     while True:
-	#reciv = receiveX(ser, [chr(startX), chr(readyB), chr(endX)] )
-	reciv = 0
+	reciv = receiveX(ser, [chr(startX), chr(readyB), chr(endX)] )
+	#reciv = 0
 	if reciv == 0:
 	    break
 	if (reciv != 2):
 	    anything = True
-	if ((time.clock() - startTime) > maxWait):
+	if ((time.time() - startTime) > maxWait):
 	    if (anything == False):
 		print "Communication Lost"
 		return 1
@@ -339,13 +342,83 @@ def logicFlow(ser, payload):
 		break
 	    # in the last five seconds we got something, try again
 	    anything = False
-	    startTime = time.clock()
+	    startTime = time.time()
     sendX(ser, chr(startX))
     sendX(ser, chr(acknow))
     sendX(ser, chr(readyB))
     sendX(ser, chr(endX))
     return 0
     
+def phase2():
+    maxWait = 5
+    reciv = 2 # This is the return val for no serial response
+    startTime = time.time()
+    while reciv == 2:
+	reciv = receiveX(ser, [chr(startX), chr(acknow), chr(burn), chr(endX)] )
+	if ((time.time() - startTime) > maxWait):
+	    # I've waited for 5 seconds, I give up
+	    return 2 
+    if reciv == 1:
+	# I recieved something, but it wasn't what I wanted
+	return 1
+    if reciv == 0:
+	return 0
+    else
+	return 2
+
+
+def phase3():
+    maxWait = 5
+    reciv = 2 # This is the return val for no serial response
+    startTime = time.time()
+    while reciv == 2:
+	reciv = receiveX(ser, [chr(startX), chr(endX), chr(readyB)] )
+	if ((time.time() - startTime) > maxWait):
+	    # I've waited for 5 seconds, I give up
+	    return 2 
+    if reciv == 1:
+	# I recieved something, but it wasn't what I wanted
+	return 1
+    if reciv == 0:
+	return 0
+    else
+	return 2
+
+def logicFlow2(ser, payload):
+    maxWait = 20
+    startTime = time.time()
+    
+    p2 = 1
+    while p2 == 1:
+	# Phase 1 0x02PAYCHECK03 Pi->MSP
+        sendPix(ser, payload)
+	# Phase 2 0x02060b03 MSP<-Pi
+	p2 = phase2()
+        startTime = time.time()
+	if ((time.time() - startTime) > maxWait):
+	    print "P2 took too long"
+	    break
+    if p2 == 2:
+	print "Communication Lost"
+	return 1
+
+    # Phase 3 0x024d03  MSP<-Pi
+    while p3 == 1:
+	p3 = phase3()
+        startTime = time.time()
+	if ((time.time() - startTime) > maxWait):
+	    print "P2 took too long"
+	    break
+    if p3 == 2:
+	print "Communication Lost"
+	return 1
+
+    # Phase 4: 0x02064d03 Pi->MSP
+    sendX(ser, chr(startX))
+    sendX(ser, chr(acknow))
+    sendX(ser, chr(readyB))
+    sendX(ser, chr(endX))
+    return 0
 
 
 
@@ -366,9 +439,9 @@ def rpSerialManager(q, ser):
 	i += 1
 	while not q.empty():
 	    payload = q.get()
-	    check = logicFlow(ser, payload)
+	    check = logicFlow2(ser, payload)
 	    if check == 1:
-		print "HALLO"
+		# Communictation lost, return error code 1: Comm Lost
 		return 1
 	    pixCount += 1
 	    q.task_done()

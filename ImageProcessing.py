@@ -66,7 +66,18 @@ Ground and power for each header?
 He really doesn't check any of this. He has no idea what's going on with us, or any group
 woo finally example electronic entry pdf
 
+02:00:00:fe:03:
+02:0b:00:1b:02:00:00:fe:03:
+02:0b:00:1b:02:00:00:fe:03:
+02:0b:00:1b:02:00:00:fe:03:
+02:0b:00:1b:02:00:00:fe:03:
+02:0b:00:1b:02:00:00:fe:03:02:0b:00:1b:02:00:00:fe:03
 
+fe:03:
+02:0b:00:1b:02:00:00:fe:03:
+02:0b:00:1b:02:00:00:fe:03:
+02:0b:00:1b:02:00:00:fe:03:
+02:0b:00:1b:02:00:00:fe:03
 
 '''
 # this is used to make sure the threads stay active as long as 
@@ -292,11 +303,11 @@ def serialManager(q, ser, printq):
 	    q.queue.clear()
 	    #sys.exit('s')
 	    break
-    print "Sdone", Sdone
+    print "Sdone Ln 306", Sdone
     if (Sdone != True):
 	check = rpSerial.rpSerialManager(q, ser)
     Sdone = True
-    print "Sdone", Sdone
+    print "Sdone Ln 310", Sdone
     return
 
    
@@ -494,7 +505,7 @@ def main(myImg, thresholdLevels):
 
 
 thresholdLevels = [75, 110, 180, 225]
-myImg = "pumpkins01.png"
+myImg = "template.png"
 
 
 def takePic():
@@ -536,6 +547,8 @@ End laser burn
 Repeat .... all? or just take pic
 
 
+make note of version of software
+RSA Encryption
 
 
 

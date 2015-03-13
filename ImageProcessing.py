@@ -327,6 +327,14 @@ def rasterImage(myImg, size):
     # **maybe resize before edge filtering **
     #imag.show()
     myA = numpy.array(imag)
+    tempA = []
+    for i in range(5):
+	for j in range(25):
+	    tempA.append(j*10)
+	for j in range(25):
+	    tempA.append((25-j)*10)
+    tempB = [tempA]
+    myA = numpy.array(tempB)
     return myA
 
 

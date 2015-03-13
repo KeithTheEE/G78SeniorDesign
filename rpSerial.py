@@ -355,7 +355,7 @@ def phase2(ser):
     startTime = time.time()
     while reciv == 2:
 	reciv = receiveX(ser, [chr(startX), chr(acknow), chr(burn), chr(endX)] )
-	if ((time.time() - startTime) > maxWait):
+	#if ((time.time() - startTime) > maxWait):
 	    # I've waited for 5 seconds, I give up
 	    #return 2 
     if reciv == 1:
@@ -373,7 +373,7 @@ def phase3(ser):
     startTime = time.time()
     while reciv == 2:
 	reciv = receiveX(ser, [chr(startX), chr(endX), chr(readyB)] )
-	if ((time.time() - startTime) > maxWait):
+	#if ((time.time() - startTime) > maxWait):
 	    # I've waited for 5 seconds, I give up
 	    #return 2 
     if reciv == 1:

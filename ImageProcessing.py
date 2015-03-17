@@ -517,6 +517,7 @@ def main(myImg, thresholdLevels):
 
 
 thresholdLevels = [75, 110, 180, 225]
+thresholdLevels = [51, 102, 153, 204]
 myImg = "template.png"
 
 

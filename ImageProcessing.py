@@ -309,7 +309,27 @@ def serialManager(q, ser, printq):
     Sdone = True
     print "Sdone Ln 310", Sdone
     return
+def checkerboard():
+    thresholdLevels = [51, 102, 153, 204, 255]
+    template = [[1,0,2,0,3],\
+		[0,2,0,3,0],\
+		[2,0,3,0,4],\
+		[0,3,0,4,0],\
+		[3,0,4,0,1]]
 
+    blockSize = 50 #pixels
+    cb = []
+    for j in range(len(template)*blockSize):
+	tempx = []
+	for i in range(len(template[0])*blockSize):
+	    x = int(i/blockSize)
+	    y = int(j/blockSize)
+	    tempx.append(thresholdLevels[template[x][y]]-1)
+	cb.append(tempx)
+
+    print cb
+
+    return cb
    
 
 def rasterImage(myImg, size):
@@ -334,6 +354,7 @@ def rasterImage(myImg, size):
 	for j in range(25):
 	    tempA.append((25-j)*10)
     tempB = [tempA, tempA, tempA, tempA, tempA]
+    #tempB = checkerboard()
     myA = numpy.array(tempB)
     return myA
 

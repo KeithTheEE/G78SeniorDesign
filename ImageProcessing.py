@@ -333,7 +333,7 @@ def rasterImage(myImg, size):
 	    tempA.append(j*10)
 	for j in range(25):
 	    tempA.append((25-j)*10)
-    tempB = [tempA]
+    tempB = [tempA, tempA, tempA, tempA, tempA]
     myA = numpy.array(tempB)
     return myA
 

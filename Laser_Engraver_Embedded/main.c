@@ -44,7 +44,7 @@ int main(void)
 	uint16_t button_pressed2 = FALSE;
 
 	// Setup
-	init_LED();
+	//init_LED();
 	init_button_inputs();
 	init_clocks();
 	init_laser();
@@ -53,19 +53,20 @@ int main(void)
 	initWaitTimer();
 
 	burn_ready = 0;
+	enable_laser();
 
 	
 	
 	// Simulated Payload
 	uint8_t burn_cmd_payload[4];
-	burn_cmd_payload[3] = 0x00;
-	burn_cmd_payload[2] = 0x04;
-	burn_cmd_payload[1] = 0x70;
-	burn_cmd_payload[0] = 0x70;
+	burn_cmd_payload[3] = 16;
+	burn_cmd_payload[2] = 32;
+	burn_cmd_payload[1] = 192;
+	burn_cmd_payload[0] = 0;
 
 	
 	// Burn Tests
-	while( 1 )
+	/*while( 1 )
 	{
 		button_pressed1 = FALSE;
 		button_pressed2 = FALSE;
@@ -81,7 +82,7 @@ int main(void)
 					button_pressed1 = TRUE;
 				}
 			}
-		}*/
+		}*//*
 
 		turn_on_laser_timed( MAX_INTENSITY,  time );
 		//turn_on_laser_timed( intensity,  60 );
@@ -98,15 +99,15 @@ int main(void)
 		{
 			intensity = 0;
 		}
-	}
+	}*/
 	
 	
 	// Test Motor Drivers
-	while(1)
+	/*while(1)
 	{
        moveMotors(100,0);
        moveMotors(0,0);
-	}
+	}*/
 
 	
 	// Test Laser Driver
@@ -115,7 +116,7 @@ int main(void)
 		button_pressed1 = FALSE;
 		button_pressed2 = FALSE;
 
-
+		// Wait till button 1.2 pressed to turn on
 		while( button_pressed1 == FALSE )
 		{
 			if( ( P1IN & BUTTON1 ) == 0 )
@@ -130,9 +131,7 @@ int main(void)
 
 
 
-
-
-		// Laser Driver Tests
+		// Start simulating commands (stop if button 2.1 pressed)
 		while( button_pressed2 == FALSE )
 		{
 			enable_laser();
@@ -142,7 +141,7 @@ int main(void)
 			while( button_pressed2 == FALSE && i < 4 )
 			{
 				j = 0;
-				while( button_pressed2 == FALSE && j < 100 )
+				while( button_pressed2 == FALSE && j < 1 )
 				{
 					respond_to_burn_cmd( burn_cmd_payload );
 					j++;
@@ -155,9 +154,17 @@ int main(void)
 							button_pressed2 = TRUE;
 						}
 					}
+
+					delay_ms( 300 );
 				}
 
 				burn_cmd_payload[3] += 0x08;
+				if( ( burn_cmd_payload[3] & 0x07 ) == 0x07 )
+				{
+					burn_cmd_payload[3] &= 0xF8;
+				}
+				burn_cmd_payload[3] += 0x01;
+
 				i++;
 			}
 

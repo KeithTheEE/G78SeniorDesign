@@ -211,7 +211,7 @@ End	0x03
     xMask = 8191
     yMask = 8191
     onMask = 1
-
+    print yLoc
     # Clean off variables 
     value = value & valMask
     xLoc = xLoc & xMask

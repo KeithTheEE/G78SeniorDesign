@@ -216,6 +216,7 @@ End	0x03
     value = value & valMask
     xLoc = xLoc & xMask
     yLoc = yLoc & yMask
+    print format(yLoc, '02x')
     keepOnFlag = keepOnFlag & onMask
 
     #Set payload

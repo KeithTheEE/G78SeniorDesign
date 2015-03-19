@@ -354,7 +354,8 @@ def rasterImage(myImg, size):
 	for j in range(25):
 	    tempA.append((25-j)*10)
     tempB = [tempA, tempA, tempA, tempA, tempA]
-    #tempB = checkerboard()
+    #tempB = checkerboard() 
+    # BLAH
     myA = numpy.array(tempB)
     return myA
 

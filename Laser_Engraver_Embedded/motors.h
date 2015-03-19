@@ -42,7 +42,7 @@ void initMotorIO(void);
 
 */
 
-void moveMotors(unsigned int Xnew, unsigned int Ynew);
+uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew);
 
 
 /*homeLaser

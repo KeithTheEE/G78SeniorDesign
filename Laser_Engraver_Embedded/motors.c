@@ -38,6 +38,25 @@ void initMotorIO(void)
 {
   //Serial.begin(9600);
   //P1DIR |= (BIT4+BIT5+BIT6) ;       // P1.2 and P1.3 as output 1.2=direction 1.3=steps
+<<<<<<< HEAD
+  // X-axis
+#ifdef DEBUG
+  P4DIR |= BIT3; //P4.3 x step - make output
+  P4DIR |= BIT0; //P4.0 x step direction - make output
+#else
+  P7DIR |= BIT5; //P7.5 x step - make output
+  P7DIR |= BIT7; //P7.7 x step direction - make output
+#endif
+
+  // Y-axis
+#ifdef DEBUG
+  P3DIR |= BIT3; //P3.3 y step - make output
+  P8DIR |= BIT2; //P8.2 y step direction - make output
+#else
+  P3DIR |= BIT6; //P3.6 y step - make output
+  P4DIR |= BIT0; //P4.0 y step direction - make output
+#endif
+=======
   // P4DIR |= BIT3 + BIT0;
   // P4DIR |= BIT7; //P4.7 led on launchpad
   P7DIR |= BIT5; //P7.5 x step - make output
@@ -45,6 +64,7 @@ void initMotorIO(void)
 
   P3DIR |= BIT6; //P3.6 y step - make output
   P4DIR |= BIT0; //P4.0 y step direction - make output
+>>>>>>> origin/master
 
   P4DIR |= BIT6; //P4.6 reset - make output
   P7DIR |= BIT6; //P4.0 enable - make output
@@ -77,10 +97,13 @@ void initMotorIO(void)
   P2IE  |= BIT2;
   ///////////////////////////////////////////////////////////////  
 
+<<<<<<< HEAD
+=======
   //P4OUT &= ~BIT7;		// Turn LED off
   //P4OUT |= BIT7;		// Turn LED on
   //P1OUT &= ~BIT5;
 
+>>>>>>> origin/master
 
   _BIS_SR(GIE);          	// interrupts enabled
 
@@ -91,6 +114,29 @@ void initMotorIO(void)
 
 
 
+<<<<<<< HEAD
+uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
+  while( ( X - Xnew ) > .001 || ( X - Xnew ) < -.001 ){
+    if(X<Xnew){
+
+#ifdef DEBUG
+     P4OUT |= BIT0;  //positive direction ONLY FOR LAUNCHPAD TESTING
+     P4OUT |= BIT3;  //set step pin  ONLY FOR LAUNCHPAD TESTING
+#else
+     P7OUT |= BIT7;  //positive direction
+     P7OUT |= BIT5;  //set step pin
+#endif
+
+      //delayMicroseconds(10);
+      delay_ms(1);
+
+#ifdef DEBUG
+      P4OUT &= ~BIT3; //reset step pin
+#else
+      P7OUT &= ~BIT5;
+#endif
+
+=======
 void moveMotors(unsigned int Xnew, unsigned int Ynew){
   while( ( X - Xnew ) > .001 || ( X - Xnew ) < -.001 ){
     if(X<Xnew){
@@ -103,6 +149,7 @@ void moveMotors(unsigned int Xnew, unsigned int Ynew){
       delay_ms(1);
       //P4OUT &= ~BIT3; //reset step pin
       P7OUT &= ~BIT5;
+>>>>>>> origin/master
       //delayMicroseconds(5);
       delay_ms(1);
       /*
@@ -114,24 +161,49 @@ void moveMotors(unsigned int Xnew, unsigned int Ynew){
       ticksX += PXL2TCK;
     }
     else if(X>Xnew){
+<<<<<<< HEAD
+
+#ifdef DEBUG
+      P4OUT &= ~BIT0; //negative direction ONLY FOR LAUNCHPAD TESTING
+      P4OUT |= BIT3;  //set step pin ONLY FOR LAUNCHPAD TESTING
+#else
+      P7OUT &= ~BIT7; //negative direction
+      P7OUT |= BIT5;  //set step pin
+#endif
+=======
       // P4OUT &= ~BIT0; //negative direction ONLY FOR LAUNCHPAD TESTING
      //  P4OUT |= BIT3;  //set step pin ONLY FOR LAUNCHPAD TESTING
       P7OUT &= ~BIT7; //negative direction
       P7OUT |= BIT5;  //set step pin
+>>>>>>> origin/master
 
       //delayMicroseconds(10);
 
       delay_ms(1);
+<<<<<<< HEAD
+#ifdef DEBUG
+      P4OUT &= ~BIT3; //reset step pin
+#else
+      P7OUT &= ~BIT5;
+#endif
+
+=======
     //  P4OUT &= ~BIT3; //reset step pin
       P7OUT &= ~BIT5;
+>>>>>>> origin/master
       //delayMicroseconds(5);
       delay_ms(1);
       ticksX -= PXL2TCK;
     }
     X = ticksX; //move to end of while
+<<<<<<< HEAD
+
+  }
+=======
 
   }
 
+>>>>>>> origin/master
 
   while( ( Y - Ynew ) > .001 || ( Y - Ynew ) < -.001 ){
       if(Y<Ynew){
@@ -171,9 +243,70 @@ void moveMotors(unsigned int Xnew, unsigned int Ynew){
       }
       Y = ticksX; //move to end of while
 
+<<<<<<< HEAD
+  while( ( Y - Ynew ) > .001 || ( Y - Ynew ) < -.001 ){
+      if(Y<Ynew){
+
+#ifdef DEBUG
+        P8OUT |= BIT2;  //positive direction ONLY FOR LAUNCHPAD TESTING
+        P3OUT |= BIT7;  //set step pin  ONLY FOR LAUNCHPAD TESTING
+#else
+        P4OUT |= BIT0;  //positive direction
+        P3OUT |= BIT6;  //set step pin
+#endif
+
+        //delayMicroseconds(10);
+        delay_ms(1);
+
+#ifdef DEBUG
+        P3OUT &= ~BIT7; //reset step pin
+#else
+        P3OUT &= ~BIT6;
+#endif
+
+        //delayMicroseconds(5);
+        delay_ms(1);
+        /*
+        P4OUT |= BIT7;  //set step pin
+         delay_ms(500);
+         P4OUT &= ~BIT7; //reset step pin
+         */
+
+        ticksY += PXL2TCK;
+      }
+      else if(Y>Ynew){
+
+#ifdef DEBUG
+        P8OUT &= ~BIT2;  // Negative direction ONLY FOR LAUNCHPAD TESTING
+        P3OUT |= BIT7;   // Set step pin ONLY FOR LAUNCHPAD TESTING
+#else
+        P4OUT &= ~BIT0; // Negative direction
+        P3OUT |= BIT6;  // Set step pin
+#endif
+
+        //delayMicroseconds(10);
+
+        delay_ms(1);
+
+#ifdef DEBUG
+        P3OUT &= ~BIT7; //reset step pin
+#else
+        P3OUT &= ~BIT6;
+#endif
+
+        //delayMicroseconds(5);
+        delay_ms(1);
+        ticksY -= PXL2TCK;
+      }
+      Y = ticksY; //move to end of while
+    }
+
+  return 0;
+=======
     }
 
   return;
+>>>>>>> origin/master
 }
 //============================================================================
 

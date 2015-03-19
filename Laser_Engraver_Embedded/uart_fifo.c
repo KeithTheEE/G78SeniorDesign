@@ -18,6 +18,7 @@
 #include "defs.h"
 #include "uart_fifo.h"
 #include "time.h"
+#include "laser_driver.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -90,18 +91,6 @@ void init_uart(void)
 	// Delay (not exactly sure why necessary, but first few bytes are gibberish if not added)
 	delay_ms( 20 );
 
-	/*volatile uint32_t i = 500000; // Delay to Test the FIFO
-	while (i != 0)
-	{
-		i--;
-	}*/
-
-	// Rasperry PI sends random character when setting up uart; read now to avoid
-	//   interference later
-	//   TODO: Make sure the character is sent with Python serial library
-	//uint8_t setup_byte;
-	//setup_byte = uart_getc();
-	//uart_putc( setup_byte );
 
 	return;
 }
@@ -237,7 +226,6 @@ void uart_putc(uint8_t c)
 	if(tx_fifo_ptB == tx_fifo_ptA)		//fifo full
 	{
 		tx_fifo_full = 1;
-		//P1OUT |= LED;
 	}
 	else
 	{
@@ -415,7 +403,6 @@ uint16_t parse_rx_packet( uint8_t *rx_buff, uint16_t length, struct TPacket_Data
 		{
 			// Error in data transmission
 			/*
-			P1OUT ^= LED;
 			uart_putc(exp_checksum);
 			uart_putc(rx_buff[rx_it]);
 			*/
@@ -632,6 +619,8 @@ void send_ready( void )
 	rx_data.ack = 0;
 	rx_data.command = 0;
 
+	// Attempt to send the message several times, waiting for the correct response
+	//   (acknowledgement and ready command)
 	while( i < MAX_ATTEMPTS && !( rx_data.ack == CMD_ACK && rx_data.command == CMD_READY ) )
 	{
 		uart_putp( tx_buff, tx_length );
@@ -640,11 +629,41 @@ void send_ready( void )
 		i++;
 	}
 
+	// If connection with the Pi is lost, halt the burn
 	if( !( rx_data.ack == CMD_ACK && rx_data.command == CMD_READY ) )
 	{
-		// TODO: Add error handling
+		halt_burn();
 	}
 
+
+	return;
+}
+//============================================================================
+
+
+
+void send_burn_stop( void )
+{
+	struct TPacket_Data tx_data;
+	tx_data.command = CMD_STOP;
+	tx_data.ack = NEW_CMD;
+	tx_data.data_size = 0;					// No payload
+
+	uint8_t tx_buff[MIN_PACKET_LENGTH];		// Minimum packet length (STX, CMD, ETX)
+	uint16_t tx_length = pack_tx_packet( tx_data, tx_buff );
+
+	struct TPacket_Data rx_data;
+	rx_data.ack = 0;
+	rx_data.command = 0;
+
+	// Attempt to send the message, waiting for the correct response
+	//   (acknowledgement and burn stop command)
+	//	 Since this implies failure, keep sending indefinitely
+	while( !( rx_data.ack == CMD_ACK && rx_data.command == CMD_STOP ) )
+	{
+		uart_putp( tx_buff, tx_length );
+		check_and_respond_to_msg( &rx_data );
+	}
 
 	return;
 }
@@ -718,8 +737,6 @@ __interrupt void USCI0RXTX_ISR(void)
 				packet_ready = 1;
 			}
 		}
-
-		//P1OUT ^= LED;						//Notify that we received a char by toggling LED
 	}
 	else if(UCA1IV_temp & BIT2)
 	{

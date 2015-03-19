@@ -31,8 +31,8 @@ void turn_on_laser( uint16_t intensity );
 void turn_on_laser_timed( uint16_t intensity, uint16_t duration );
 void turn_off_laser( void );
 
-
 void respond_to_burn_cmd( uint8_t * burn_cmd_payload );
+void halt_burn( void );
 
 ////////////////////////////////////////////////////////////////////////////////
 

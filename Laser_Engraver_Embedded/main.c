@@ -37,6 +37,8 @@ extern uint32_t time_ms;
 
 int main(void)
 {
+	P3DIR |= BIT3;
+	P3OUT |= BIT3;
 	uint16_t i, j;
 	uint16_t time = 0;
 	uint16_t intensity = 0;

@@ -216,8 +216,8 @@ End	0x03
     value = value & valMask
     xLoc = xLoc & xMask
     yLoc = yLoc & yMask
-    print format(yLoc, '02x')
     keepOnFlag = keepOnFlag & onMask
+    print format(value, '02x'), format(xLoc, '02x'), format(yLoc, '02x'), format(keepOnFlag, '02x')
 
     #Set payload
     payload = payload | value
@@ -227,7 +227,7 @@ End	0x03
     payload = payload | yLoc
     payload = payload << 1
     payload = payload | keepOnFlag    
-    #print int(payload)
+    print format(payload, '02x')
     return payload
 
 def rasterQ(imagA, q, levels, printq):

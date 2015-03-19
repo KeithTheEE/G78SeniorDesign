@@ -372,6 +372,7 @@ uint16_t parse_rx_packet( uint8_t *rx_buff, uint16_t length, struct TPacket_Data
 		// Add the data bytes to the field of the rx_data structure
 		// MSB First
 		int16_t j = rx_data->data_size - 1;
+		int16_t temp = 0xFF;
 		
 		while( j >= 0 && rx_it < length )
 		{
@@ -379,6 +380,7 @@ uint16_t parse_rx_packet( uint8_t *rx_buff, uint16_t length, struct TPacket_Data
 			if( rx_buff[rx_it] == ESC ) { rx_it++; }
 
 			rx_data->data[j] = rx_buff[rx_it];
+			temp = rx_data->data[j];
 			rx_it++;
 			j--;
 		}
@@ -515,39 +517,47 @@ void parse_burn_cmd_payload( uint8_t * burn_cmd_payload,
 {
 	uint32_t combinedPacket  = 0;
 	uint32_t combinedPacket2 = 0;
+	uint16_t i = 0;
+
+	volatile uint32_t tempy;
+	volatile uint32_t tempx;
+	volatile uint32_t tempint;
 
 	// Data stored with LSB first
-	combinedPacket |= (*burn_cmd_payload );
-	burn_cmd_payload += 1;
+	combinedPacket |= (uint32_t)burn_cmd_payload[i];
+	i++;
 
-	combinedPacket |= (*burn_cmd_payload << 8);
-	burn_cmd_payload += 1;
+	combinedPacket |= ( (uint32_t)burn_cmd_payload[i] << 8 );
+	i++;
 
 	// Had to use two different ints because shifting by 16 wasn't working
-	combinedPacket2 |= (*burn_cmd_payload << 0);
-	burn_cmd_payload += 1;
+	combinedPacket2 |= ( (uint32_t)burn_cmd_payload[i] << 0 );
+	i++;
 
-	combinedPacket2 |= (*burn_cmd_payload << 8 );
+	combinedPacket2 |= ( (uint32_t)burn_cmd_payload[i] << 8 );
 
 	combinedPacket= (combinedPacket | (combinedPacket2 <<16)); // Combine ints
 
 	// Set y coordinate
-	*yLocation= combinedPacket ;
+	*yLocation= combinedPacket;
 	*yLocation &= 0x00003FFE;
 	*yLocation = (*yLocation >> 1);
 
+	tempy = *yLocation;
+
 	// Set x coordinate
 	*xLocation = combinedPacket;
-	*xLocation &= 0x7FFC000;
-	*xLocation = (*xLocation >> 14) ;
+	*xLocation &= 0x07FFC000;
+	*xLocation = (*xLocation >> 14);
+
+	tempx = *xLocation;
 
 	// Set Laser intensity
 	*laserInt = combinedPacket;
 	*laserInt = (*laserInt & 0x18000000);
-	*laserInt= *laserInt >> 27 ;
+	*laserInt= (*laserInt >> 27);
 
-	combinedPacket =0;//reset ints
-	combinedPacket2=0;
+	tempint = *laserInt;
 
 	return;
 }

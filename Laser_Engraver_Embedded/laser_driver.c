@@ -24,6 +24,11 @@
 
 
 uint8_t laser_on = FALSE;
+uint32_t intensity_buffer[100];
+uint32_t x_pos_buffer[100];
+uint32_t y_pos_buffer[100];
+
+uint16_t buffer_it = 0;
 
 volatile uint8_t burn_ready = 0;
 
@@ -129,11 +134,25 @@ void respond_to_burn_cmd( uint8_t * burn_cmd_payload )
 	uint32_t y_pos;
 	uint32_t x_pos;
 	uint32_t laser_intensity;
+	volatile uint16_t temp0 = burn_cmd_payload[0];
+	volatile uint16_t temp1 = burn_cmd_payload[1];
+	volatile uint16_t temp2 = burn_cmd_payload[2];
+	volatile uint16_t temp3 = burn_cmd_payload[3];
+
+
 
 	parse_burn_cmd_payload( burn_cmd_payload,
 							&y_pos,
 							&x_pos,
 							&laser_intensity );
+
+	if( buffer_it < 100 )
+	{
+		intensity_buffer[buffer_it] = laser_intensity;
+		x_pos_buffer[buffer_it] = x_pos;
+		y_pos_buffer[buffer_it] = y_pos;
+		buffer_it++;
+	}
 
 	// Move Laser
 	moveMotors( x_pos, y_pos );
@@ -141,9 +160,11 @@ void respond_to_burn_cmd( uint8_t * burn_cmd_payload )
 	
 	//uint8_t laser_intensity = ( burn_cmd_payload[0] & LASER_INTENSITY_MASK ) >> LASER_INTENSITY_SHIFT;
 
+	delay_ms( 300 );
+
 	switch( laser_intensity )
 	{
-		/*case 0:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_1 );
+		case 0:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_1 );
 				 break;
 
 		case 1:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_2 );
@@ -153,9 +174,9 @@ void respond_to_burn_cmd( uint8_t * burn_cmd_payload )
 				 break;
 
 		case 3:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_4 );
-				 break;*/
+				 break;
 
-		case 0:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_4 );
+		/*case 0:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_4 );
 			  	 break;
 
 		case 1:  turn_on_laser_timed( INTENSITY_3, LASER_DUR_4 );
@@ -165,7 +186,7 @@ void respond_to_burn_cmd( uint8_t * burn_cmd_payload )
 				 break;
 
 		case 3:  turn_on_laser_timed( INTENSITY_1, LASER_DUR_4 );
-				 break;
+				 break;*/
 
 		default: break;
 	}

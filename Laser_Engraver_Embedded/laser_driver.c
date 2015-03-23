@@ -26,11 +26,7 @@
 uint8_t laser_on = FALSE;
 uint32_t intensity_buffer[100];
 uint32_t x_pos_buffer[100];
-<<<<<<< HEAD
 uint32_t y_pos_buffer[750];
-=======
-uint32_t y_pos_buffer[100];
->>>>>>> origin/master
 
 uint16_t buffer_it = 0;
 
@@ -150,7 +146,6 @@ void respond_to_burn_cmd( uint8_t * burn_cmd_payload )
 							&x_pos,
 							&laser_intensity );
 
-<<<<<<< HEAD
 	if( buffer_it < 750  )
 	{
 		//intensity_buffer[buffer_it] = laser_intensity;
@@ -159,15 +154,7 @@ void respond_to_burn_cmd( uint8_t * burn_cmd_payload )
 		buffer_it++;
 	}
 	//buffer_it++;
-=======
-	if( buffer_it < 100 )
-	{
-		intensity_buffer[buffer_it] = laser_intensity;
-		x_pos_buffer[buffer_it] = x_pos;
-		y_pos_buffer[buffer_it] = y_pos;
-		buffer_it++;
-	}
->>>>>>> origin/master
+	
 
 	// Move Laser
 	if( moveMotors( x_pos, y_pos ) == 1 )
@@ -178,11 +165,7 @@ void respond_to_burn_cmd( uint8_t * burn_cmd_payload )
 	
 	//uint8_t laser_intensity = ( burn_cmd_payload[0] & LASER_INTENSITY_MASK ) >> LASER_INTENSITY_SHIFT;
 
-<<<<<<< HEAD
 	// delay_ms( 300 );
-=======
-	delay_ms( 300 );
->>>>>>> origin/master
 
 	switch( laser_intensity )
 	{

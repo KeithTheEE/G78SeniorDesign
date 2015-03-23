@@ -15,13 +15,7 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-<<<<<<< HEAD
 
-
-=======
-
-
->>>>>>> origin/master
 #include <stdint.h>
 
 #include "defs.h"
@@ -81,11 +75,8 @@ uint8_t calc_8bit_mod_checksum( uint8_t *data, uint16_t length );
 
 void check_and_respond_to_msg( struct TPacket_Data * rx_data );
 void send_ready( void );
-<<<<<<< HEAD
 void send_burn_stop( void );
 
-=======
->>>>>>> origin/master
 void send_ack( uint8_t command, uint8_t ack );
 
 ////////////////////////////////////////////////////////////////////////////////

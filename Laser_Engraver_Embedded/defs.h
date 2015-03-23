@@ -43,15 +43,9 @@
 #define LASER_INTENSITY_MASK	0x18
 #define LASER_INTENSITY_SHIFT	3
 
-<<<<<<< HEAD
-#define LASER_DUR_1				20
-#define LASER_DUR_2				35
-#define LASER_DUR_3				60
-=======
-#define LASER_DUR_1				10
-#define LASER_DUR_2				25
+#define LASER_DUR_1				15
+#define LASER_DUR_2				30
 #define LASER_DUR_3				50
->>>>>>> origin/master
 #define LASER_DUR_4				100
 
 #define MAX_INTENSITY 			12300	// 100%
@@ -66,12 +60,8 @@
 //============================================================================
 // Motor Driver
 
-<<<<<<< HEAD
 #define DEBUG
 // #define PXL2TCK 	1 		// Pixel to ticks ratio assuming 1:1
-=======
-// #define PXL2TCK 	1 		//pixel to ticks ratio assuming 1:1
->>>>>>> origin/master
 #define XHOME 		BIT4 
 // #define YHOME 		BIT45	// TODO: check if this was 4 or 5
 //============================================================================

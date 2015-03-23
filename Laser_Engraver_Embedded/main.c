@@ -37,8 +37,10 @@ extern uint32_t time_ms;
 
 int main(void)
 {
+	// LED on PCB
 	P3DIR |= BIT3;
 	P3OUT |= BIT3;
+
 	uint16_t i, j;
 	uint16_t time = 0;
 	uint16_t intensity = 0;
@@ -105,10 +107,12 @@ int main(void)
 	
 	
 	// Test Motor Drivers
-	/*while(1)
+/*	while(1)
 	{
-       moveMotors(100,0);
+       moveMotors(100,100);
+       delay_ms( 10 );
        moveMotors(0,0);
+       delay_ms( 10 );
 	}*/
 
 	

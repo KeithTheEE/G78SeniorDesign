@@ -3,7 +3,7 @@
 // Name        : main.c
 // Author      : Garin Newcomb and Tyler Troyer
 // Email       : gpnewcomb@live.com and troyerta@gmail.com
-// Date		   : 2014-10-11 (Created), 2015-03-08 (Last Updated)
+// Date		   : 2014-10-11 (Created), 2015-04-01 (Last Updated)
 // Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
 // Description : Laser Engraver Embedded project 'Main' file, including
 //				 'main()'
@@ -37,19 +37,29 @@ extern uint32_t time_ms;
 
 int main(void)
 {
-	// LED on PCB
-	P3DIR |= BIT3;
-	P3OUT |= BIT3;
-
+	// ------------------------------
+	// Variable Declaration
 	uint16_t i, j;
 	uint16_t time = 0;
 	uint16_t intensity = 0;
 	uint16_t button_pressed1 = FALSE;
 	uint16_t button_pressed2 = FALSE;
+	uint16_t input_pin_high  = FALSE;
+	// ------------------------------
 
+
+
+	// ------------------------------
 	// Setup
-	//init_LED();
-	init_button_inputs();
+	#ifdef DEBUG
+		init_button_inputs();
+		init_debug_LED();
+	#else
+		init_pcb_input();
+		init_pcb_LED();
+		P3OUT |= PCB_LED;	// Turn on the LED
+	#endif
+
 	init_clocks();
 	init_laser();
     init_uart();
@@ -58,18 +68,102 @@ int main(void)
 
 	burn_ready = 0;
 	enable_laser();
+	// ------------------------------
+	
+	
 
-	
-	
-	// Simulated Payload
-	uint8_t burn_cmd_payload[4];
-	burn_cmd_payload[3] = 16;
-	burn_cmd_payload[2] = 32;
-	burn_cmd_payload[1] = 192;
-	burn_cmd_payload[0] = 0;
+	// ------------------------------
+	// Simulated Checkerboard burn
 
-	
+	// Wait for input pin to go high
+		/*while( input_pin_high == FALSE )
+		{
+			if( ( P6IN & BIT7 ) != 0 )
+			{
+				delay_ms( 20 );
+				if( ( P6IN & BIT7 ) != 0 )
+				{
+					input_pin_high = TRUE;
+				}
+			}
+		}*/
+
+
+	int burn_array[50][50];
+
+	for( i = 0; i < 50; i++ )
+	{
+		for( j = 0; j < 50; j++ )
+		{
+			burn_array[i][j] = 0;
+		}
+	}
+
+	for( i = 0; i < 50; i++ )
+	{
+		for( j = 0; j < 50; j++ )
+		{
+			if( ( i < 10 && j < 10 ) ||
+				( i < 30 && i >= 20 && j < 10 && j >= 0 ) ||
+				( i < 20 && i >= 10 && j < 20 && j >= 10 ) ||
+				( i < 10 && i >= 0  && j < 30 && j >= 20 ) ||
+				( i < 50 && i >= 40 && j < 30 && j >= 20 ) ||
+				( i < 50 && i >= 40 && j < 50 && j >= 40 ) ||
+				( i < 40 && i >= 30 && j < 40 && j >= 30 ) ||
+				( i < 30 && i >= 20 && j < 50 && j >= 40 ) )
+			{
+				burn_array[i][j] = 4;
+			}
+
+
+			if( ( i < 10 && i >= 0  && j < 50 && j >= 40 ) ||
+				( i < 20 && i >= 10 && j < 40 && j >= 30 ) ||
+				( i < 30 && i >= 20 && j < 30 && j >= 20 ) ||
+				( i < 40 && i >= 30 && j < 20 && j >= 10 ) ||
+				( i < 50 && i >= 40 && j < 10 && j >= 0 ) )
+			{
+				burn_array[i][j] = 2;
+			}
+		}
+	}
+
+
+	for( i = 0; i < 50; i++ )
+	{
+		for( j = 0; j < 50; j++ )
+		{
+			if( burn_array[i][j] != 0 )
+			{
+				moveMotors( j, i);
+
+				switch( burn_array[i][j] - 1 )
+				{
+					case 0:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_1 );
+							 break;
+
+					case 1:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_2 );
+							 break;
+
+					case 2:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_3 );
+							 break;
+
+					case 3:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_4 );
+							 break;
+
+					default: break;
+				}
+			}
+
+		}
+	}
+	// ------------------------------
+
+
+
+	// ------------------------------
 	// Burn Tests
+	
+	// Wait for Button 1 Press
 	/*while( 1 )
 	{
 		button_pressed1 = FALSE;
@@ -86,9 +180,9 @@ int main(void)
 					button_pressed1 = TRUE;
 				}
 			}
-		}*//*
+		}*/
 
-		turn_on_laser_timed( MAX_INTENSITY,  time );
+		/*turn_on_laser_timed( MAX_INTENSITY,  time );
 		//turn_on_laser_timed( intensity,  60 );
 
 		//delay_ms( 500 );
@@ -104,8 +198,11 @@ int main(void)
 			intensity = 0;
 		}
 	}*/
+	// ------------------------------
+
 	
 	
+	// ------------------------------
 	// Test Motor Drivers
 /*	while(1)
 	{
@@ -114,9 +211,21 @@ int main(void)
        moveMotors(0,0);
        delay_ms( 10 );
 	}*/
+	// ------------------------------
+
 
 	
+	// ------------------------------
 	// Test Laser Driver
+
+	// Simulated Payload
+	uint8_t burn_cmd_payload[4];
+	burn_cmd_payload[3] = 16;
+	burn_cmd_payload[2] = 32;
+	burn_cmd_payload[1] = 192;
+	burn_cmd_payload[0] = 0;
+
+	// Wait for Button 1 Press
 	/*while( 1 )
 	{
 		button_pressed1 = FALSE;
@@ -133,12 +242,12 @@ int main(void)
 					button_pressed1 = TRUE;
 				}
 			}
-		}
+		}*/
 
 
 
 		// Start simulating commands (stop if button 2.1 pressed)
-		while( button_pressed2 == FALSE )
+		/*while( button_pressed2 == FALSE )
 		{
 			enable_laser();
 			i = 0;
@@ -190,7 +299,11 @@ int main(void)
 			//delay_ms( 1000 );
 		}
 	}*/
+	// ------------------------------
 
+
+
+	// ------------------------------
 	// Main loop
 	while( 1 )
 	{
@@ -199,6 +312,8 @@ int main(void)
 
 		if( burn_ready == 1 ) { respond_to_burn_cmd( rx_data.data ); }	
 	}
+	// ------------------------------
+
 
 	return 0;
 }
@@ -279,7 +394,7 @@ int main(void)
 		//uart_putc( c3 );
 		//uart_putc( c4 );
 
-		if( c == 0x1B && c2 == 8 && c3 == ETX && c4 == 0x04 ) { P1OUT |= LED; }
+		if( c == 0x1B && c2 == 8 && c3 == ETX && c4 == 0x04 ) { P1OUT |= DEBUG_LED; }
 
 
     	//uint8_t rec_packet[1024];

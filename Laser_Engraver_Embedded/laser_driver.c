@@ -3,7 +3,7 @@
 // Name        : laser_driver.c
 // Author      : Garin Newcomb
 // Email       : gpnewcomb@live.com
-// Date		   : 2015-02-05 (Created), 2015-03-08 (Last Updated)
+// Date		   : 2015-02-05 (Created), 2015-03-18 (Last Updated)
 // Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
 // Description : Source code to drive the analog input to the laser driver via
 //				 PWM
@@ -37,6 +37,8 @@ volatile uint8_t burn_ready = 0;
 
 void init_laser( void )
 {
+	disable_laser();
+
 	// Set up TimerA_0 for PWM on the laser input
 	init_timer_A0();
 
@@ -46,7 +48,7 @@ void init_laser( void )
 
 
 	// Set Port 1.2 I/O to GPIO mode (laser enable pin)
-	P1OUT &= ~LASER_ENA_PIN;	// Laser disabled
+	P1OUT |=  LASER_ENA_PIN;	// Laser disabled
 	P1SEL &= ~LASER_ENA_PIN;	// Select I/O
 	P1DIR |=  LASER_ENA_PIN;	// Select output
 
@@ -57,9 +59,9 @@ void init_laser( void )
 
 
 
-void enable_laser( void )
+void disable_laser( void )
 {
-	P1OUT = LASER_ENA_PIN;		// Laser enabled
+	P1OUT |= LASER_ENA_PIN;		// Laser enabled
 
 	return;
 }
@@ -67,7 +69,7 @@ void enable_laser( void )
 
 
 
-void disable_laser( void )
+void enable_laser( void )
 {
 	P1OUT &= ~LASER_ENA_PIN;	// Laser disabled
 

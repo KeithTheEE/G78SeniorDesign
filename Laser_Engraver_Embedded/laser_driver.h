@@ -3,7 +3,7 @@
 // Name        : laser_driver.h
 // Author      : Garin Newcomb
 // Email       : gpnewcomb@live.com
-// Date		   : 2015-02-05 (Created), 2015-03-08 (Last Updated)
+// Date		   : 2015-02-05 (Created), 2015-03-18 (Last Updated)
 // Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
 // Description : Header file including function prototypes used in driving
 //				 the laser driver's analog input

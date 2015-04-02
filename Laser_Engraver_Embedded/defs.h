@@ -3,7 +3,7 @@
 // Name        : defs.h
 // Author      : Garin Newcomb
 // Email       : gpnewcomb@live.com
-// Date		   : 2014-10-11 (Created), 2015-03-08 (Last Updated)
+// Date		   : 2014-10-11 (Created), 2015-04-01 (Last Updated)
 // Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
 // Description : Header file to define macros used for in the project
 //============================================================================
@@ -27,7 +27,8 @@
 //============================================================================
 // Debug
 
-#define LED 		BIT0
+#define DEBUG_LED 	BIT0
+#define PCB_LED 	BIT3
 #define BUTTON1 	BIT1
 #define BUTTON2 	BIT1
 //============================================================================
@@ -60,7 +61,7 @@
 //============================================================================
 // Motor Driver
 
-#define DEBUG
+//#define DEBUG
 // #define PXL2TCK 	1 		// Pixel to ticks ratio assuming 1:1
 #define XHOME 		BIT4 
 // #define YHOME 		BIT45	// TODO: check if this was 4 or 5

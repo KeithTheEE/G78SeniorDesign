@@ -5,7 +5,7 @@
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_PROGRAM.TI MSP430 USB1/MSP430" value="${build_artifact:Laser_Engraver}"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_PROJECT.TI MSP430 USB1/MSP430" value="Laser_Engraver"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_TARGET_CONFIG" value="${target_config_active_default:Laser_Engraver}"/>
-<stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.TI MSP430 USB1/MSP430" value="C:/Users\USER\Elijah\elijah_files\College\4 Senior\ELEC 494_495\G78SeniorDesign\Laser_Engraver_Embedded\Debug\Laser_Engraver.out"/>
+<stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.TI MSP430 USB1/MSP430" value="C:/Users\Garin\College\4 Senior\ELEC 494_495\G78SeniorDesign\G78SeniorDesign\Laser_Engraver_Embedded\Debug\Laser_Engraver.out"/>
 <mapAttribute key="com.ti.ccstudio.debug.ui.displayFormats">
 <mapEntry key="TI MSP430 USB1/MSP430@##separator##@0" value="16-Bit Hex - TI Style"/>
 </mapAttribute>

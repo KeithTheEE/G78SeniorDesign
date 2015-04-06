@@ -30,6 +30,7 @@
 
 extern volatile uint8_t packet_ready;
 extern volatile uint8_t burn_ready;
+extern volatile uint8_t picture_ip;
 extern uint32_t time_ms;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,7 +58,7 @@ int main(void)
 	#else
 		init_pcb_input();
 		init_pcb_LED();
-		P3OUT |= PCB_LED;	// Turn on the LED
+		P3OUT |= PCB_LED;	// Turn on the debug LED
 	#endif
 
 	init_clocks();
@@ -65,9 +66,9 @@ int main(void)
     init_uart();
 	initMotorIO();
 	initWaitTimer();
-
-	burn_ready = 0;
-	enable_laser();
+	
+	// Indicate to the Pi that everything has been initialized
+	send_MSP_initialized();
 	// ------------------------------
 	
 	
@@ -88,7 +89,7 @@ int main(void)
 			}
 		}*/
 
-
+/*
 	int burn_array[50][50];
 
 	for( i = 0; i < 50; i++ )
@@ -155,7 +156,7 @@ int main(void)
 			}
 
 		}
-	}
+	}*/
 	// ------------------------------
 
 
@@ -310,7 +311,11 @@ int main(void)
 		struct TPacket_Data rx_data;
 		check_and_respond_to_msg( &rx_data );
 
-		if( burn_ready == 1 ) { respond_to_burn_cmd( rx_data.data ); }	
+		if( picture_ip == TRUE )
+		{
+			if( burn_ready == TRUE ) { respond_to_burn_cmd( rx_data.data ); }	
+		}
+		
 	}
 	// ------------------------------
 
@@ -333,7 +338,7 @@ int main(void)
 	{
 		struct TPacket_Data tx_data;
 		tx_data.command = rx_data.command;
-		tx_data.ack = CMD_ACK;
+		tx_data.ack = ACK_MSG;
 		tx_data.data_size = 0;
 
 		uint8_t tx_buff[MAX_PACKET_LENGTH];

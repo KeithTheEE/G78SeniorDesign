@@ -30,7 +30,8 @@ uint32_t y_pos_buffer[750];
 
 uint16_t buffer_it = 0;
 
-volatile uint8_t burn_ready = 0;
+volatile uint8_t burn_ready = FALSE;
+volatile uint8_t picture_ip = FALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -200,10 +201,10 @@ void respond_to_burn_cmd( uint8_t * burn_cmd_payload )
 
 
 	// Reset the tracking variable
-	burn_ready = 0;
+	burn_ready = FALSE;
 
 	// When done executing the burn, request another command
-	send_ready();
+	send_ready_for_pixel();
 
 	return;
 }
@@ -216,6 +217,8 @@ void halt_burn( void )
 	// First disable the laser and make sure the PWM input is off
 	disable_laser();
 	turn_off_laser();
+	
+	picture_ip = FALSE;
 	
 	// Tell the Pi the burn is ending
 	send_burn_stop();

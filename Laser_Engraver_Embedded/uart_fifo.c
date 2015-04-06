@@ -44,6 +44,7 @@ volatile uint8_t packet_ip;
 volatile uint8_t packet_ready;
 
 extern volatile uint8_t burn_ready;
+extern volatile uint8_t picture_ip;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -84,7 +85,7 @@ void init_uart(void)
 	packet_ip    = 0;
 	packet_ready = 0;
 
-	burn_ready = 0;
+	burn_ready = FALSE;
 
 	__enable_interrupt();				//Interrupts Enabled
 
@@ -279,8 +280,8 @@ uint16_t parse_rx_packet( uint8_t *rx_buff, uint16_t length, struct TPacket_Data
 {
 	// Set the command to 'NAK' originally, so if an error occurs before the command is read, the calling function
 	//  doesn't get a false command
-	rx_data->command   = CMD_NAK;
-	rx_data->ack       = CMD_NAK;
+	rx_data->command   = NAK_MSG;
+	rx_data->ack       = NAK_MSG;
 	rx_data->data_size = 0;
 
 
@@ -310,15 +311,15 @@ uint16_t parse_rx_packet( uint8_t *rx_buff, uint16_t length, struct TPacket_Data
 	*/
 
 	// Check if an ACK/NAK was received
-	if( rx_buff[rx_it] == CMD_ACK )
+	if( rx_buff[rx_it] == ACK_MSG )
 	{
-		rx_data->ack = CMD_ACK;
+		rx_data->ack = ACK_MSG;
 		rx_it++;
 	}
-	else if( rx_buff[rx_it] == CMD_NAK )
+	else if( rx_buff[rx_it] == NAK_MSG )
 	{
 		// resend message
-		rx_data->ack = CMD_NAK;
+		rx_data->ack = NAK_MSG;
 		rx_it++;
 	}
 	else
@@ -333,24 +334,28 @@ uint16_t parse_rx_packet( uint8_t *rx_buff, uint16_t length, struct TPacket_Data
 	{
 		switch( rx_data->command )
 		{
-			case CMD_BURN  :	rx_data->data_size = CMD_BURN_PAYLOAD_SIZE;		break;
-		  //case CMD_READY :	rx_data->data_size = CMD_READY_PAYLOAD_SIZE;	break;
-
+			// PI -> MSP
+			case CMD_BURN  : rx_data->data_size = CMD_BURN_PAYLOAD_SIZE;	break;
+			case CMD_START : rx_data->data_size = CMD_START_PAYLOAD_SIZE;	break;
+			case CMD_END   : rx_data->data_size = CMD_END_PAYLOAD_SIZE;		break;
+			
 			// If command not recognized, return an error
-			default		   : 	rx_data->command = CMD_NAK;
-								return 1;
+			default		   : rx_data->command = NAK_MSG;
+						     return 1;
 		}
 	}
 	else
 	{
 		switch( rx_data->command )
 		{
-		  //case CMD_BURN  :	rx_data->data_size = CMD_BURN_RESPONSE_SIZE;	break;
-			case CMD_READY :	rx_data->data_size = CMD_READY_RESPONSE_SIZE;	break;
+			// MSP -> PI
+			case CMD_PIXEL_READY :	rx_data->data_size = CMD_READY_RESPONSE_SIZE;	break;
+			case CMD_EMERGENCY   :	rx_data->data_size = CMD_EMERG_RESPONSE_SIZE;	break;
+			case CMD_MSP_INIT    :	rx_data->data_size = CMD_INIT_RESPONSE_SIZE;	break;
 
 			// If command not recognized, return an error
-			default		   : 	rx_data->command = CMD_NAK;
-								return 1;
+			default		         : 	rx_data->command = NAK_MSG;
+									return 1;
 		}
 	}
 
@@ -431,16 +436,16 @@ uint16_t pack_tx_packet( struct TPacket_Data tx_data, uint8_t * tx_buff )
 
 	tx_buff[tx_it++] = STX;
 
-	if( tx_data.ack == CMD_NAK || tx_data.ack == CMD_ACK )
+	if( tx_data.ack == NAK_MSG || tx_data.ack == ACK_MSG )
 	{
 		tx_buff[tx_it++] = tx_data.ack;
 
-		if( tx_data.command != CMD_NAK )
+		if( tx_data.command != NAK_MSG )
 		{
 			tx_buff[tx_it++] = tx_data.command;
 		}
 	}
-	else
+	else // tx_data.ack == NEW_MSG
 	{
 		tx_buff[tx_it++] = tx_data.command;
 
@@ -580,19 +585,30 @@ void check_and_respond_to_msg( struct TPacket_Data * rx_data )
 		{
 			switch( lrx_data.command )
 			{
-				case CMD_BURN :  send_ack( lrx_data.command, CMD_ACK );
-								 burn_ready = 1;
-							     break;
-
-				case CMD_READY : break;
+				case CMD_BURN        : send_ack( lrx_data.command, ACK_MSG );
+								       burn_ready = TRUE;
+							           break;
+								 
+				case CMD_START       : send_ack( lrx_data.command, ACK_MSG );
+								       enable_laser();
+								       picture_ip = TRUE;
+								       burn_ready = FALSE;
+							           break;
+				                     
+				case CMD_END   		 : send_ack( lrx_data.command, ACK_MSG );
+									   disable_laser();
+									   picture_ip = FALSE;
+									   break;
+								 
+				case CMD_PIXEL_READY : break;
 
 				// Bad commands should be caught in the parsing function
-				default		  :  send_ack( lrx_data.command, CMD_NAK );
+				default		         :  send_ack( lrx_data.command, NAK_MSG );
 			}
 		}
 		else
 		{
-			send_ack( lrx_data.command, CMD_NAK );
+			send_ack( lrx_data.command, NAK_MSG );
 		}
 
 		if( rx_data != 0 ) { *rx_data = lrx_data; }
@@ -604,14 +620,14 @@ void check_and_respond_to_msg( struct TPacket_Data * rx_data )
 
 
 
-void send_ready( void )
+void send_ready_for_pixel( void )
 {
 	struct TPacket_Data tx_data;
-	tx_data.command = CMD_READY;
+	tx_data.command = CMD_PIXEL_READY;
 	tx_data.ack = NEW_CMD;
-	tx_data.data_size = 0;
+	tx_data.data_size = 0;					// No payload
 
-	uint8_t tx_buff[MIN_PACKET_LENGTH];
+	uint8_t tx_buff[MIN_PACKET_LENGTH];		// Minimum packet length (STX, CMD, ETX)
 	uint16_t tx_length = pack_tx_packet( tx_data, tx_buff );
 
 	uint16_t i = 0;
@@ -621,7 +637,7 @@ void send_ready( void )
 
 	// Attempt to send the message several times, waiting for the correct response
 	//   (acknowledgement and ready command)
-	while( i < MAX_ATTEMPTS && !( rx_data.ack == CMD_ACK && rx_data.command == CMD_READY ) )
+	while( i < MAX_ATTEMPTS && !( rx_data.ack == ACK_MSG && rx_data.command == tx_data.command ) )
 	{
 		uart_putp( tx_buff, tx_length );
 		check_and_respond_to_msg( &rx_data );
@@ -630,9 +646,39 @@ void send_ready( void )
 	}
 
 	// If connection with the Pi is lost, halt the burn
-	if( !( rx_data.ack == CMD_ACK && rx_data.command == CMD_READY ) )
+	if( !( rx_data.ack == ACK_MSG && rx_data.command == tx_data.command ) )
 	{
 		halt_burn();
+	}
+
+
+	return;
+}
+//============================================================================
+
+
+
+void send_MSP_initialized( void )
+{
+	struct TPacket_Data tx_data;
+	tx_data.command = CMD_MSP_INIT;
+	tx_data.ack = NEW_CMD;
+	tx_data.data_size = 0;					// No payload
+
+	uint8_t tx_buff[MIN_PACKET_LENGTH];		// Minimum packet length (STX, CMD, ETX)
+	uint16_t tx_length = pack_tx_packet( tx_data, tx_buff );
+
+	struct TPacket_Data rx_data;
+	rx_data.ack = 0;
+	rx_data.command = 0;
+
+	// Since the MSP can't do anything until communication is initialized, 
+	//   attempt to send the message until the correct response is received
+	//   (acknowledgement and ready command)
+	while( !( rx_data.ack == ACK_MSG && rx_data.command == tx_data.command ) )
+	{
+		uart_putp( tx_buff, tx_length );
+		check_and_respond_to_msg( &rx_data );
 	}
 
 
@@ -645,7 +691,7 @@ void send_ready( void )
 void send_burn_stop( void )
 {
 	struct TPacket_Data tx_data;
-	tx_data.command = CMD_STOP;
+	tx_data.command = CMD_EMERGENCY;
 	tx_data.ack = NEW_CMD;
 	tx_data.data_size = 0;					// No payload
 
@@ -659,7 +705,7 @@ void send_burn_stop( void )
 	// Attempt to send the message, waiting for the correct response
 	//   (acknowledgement and burn stop command)
 	//	 Since this implies failure, keep sending indefinitely
-	while( !( rx_data.ack == CMD_ACK && rx_data.command == CMD_STOP ) )
+	while( !( rx_data.ack == ACK_MSG && rx_data.command == CMD_EMERGENCY ) )
 	{
 		uart_putp( tx_buff, tx_length );
 		check_and_respond_to_msg( &rx_data );

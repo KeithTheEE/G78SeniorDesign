@@ -74,8 +74,9 @@ void parse_burn_cmd_payload( uint8_t * burn_cmd_payload,
 uint8_t calc_8bit_mod_checksum( uint8_t *data, uint16_t length );
 
 void check_and_respond_to_msg( struct TPacket_Data * rx_data );
-void send_ready( void );
-void send_burn_stop( void );
+void send_ready_for_pixel( void );
+void send_MSP_initialized( void );
+void send_burn_stop      ( void );
 
 void send_ack( uint8_t command, uint8_t ack );
 

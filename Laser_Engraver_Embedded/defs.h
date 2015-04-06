@@ -86,22 +86,33 @@
 #define ETX		  	0X03
 #define STX			0x02
 #define ESC			0x1B
-#define CMD_ACK		0x06
-#define CMD_NAK		0X3F
+#define ACK_MSG		0x06
+#define NAK_MSG		0X3F
 #define NEW_CMD		0X00
 
 
 // Commands
-#define CMD_BURN	0x0B
-#define CMD_READY	0x4D
-#define CMD_STOP	0x0D
+#define CMD_BURN		0x0B		// PI  -> MSP : Pi commands the MSP430 to execute a burn pixel operation (payload includes all necessary data)
+#define CMD_PIXEL_READY	0x4D		// MSP -> PI  : MSP has finished previous burn pixel operation and is ready for another (no payload)
+#define CMD_EMERGENCY	0x0D		// MSP -> PI  : MSP has encountered a problem and needs to stop the burn (payload indicates failure condition)
+#define CMD_MSP_INIT	0x01		// MSP -> PI  : MSP is initialized and ready to burn an image (no payload)
+#define CMD_START		0x11		// PI  -> MSP : Pi will commence sending burn pixel commands (no payload)
+#define CMD_END			0x0F		// PI  -> MSP : Pi indicates to the MSP that the picture is complete (no payload)
 
 
 #define CMD_BURN_PAYLOAD_SIZE		4
 #define CMD_READY_PAYLOAD_SIZE		0
+#define CMD_EMERG_PAYLOAD_SIZE		1
+#define CMD_INIT_PAYLOAD_SIZE		0
+#define CMD_START_PAYLOAD_SIZE		0
+#define CMD_END_PAYLOAD_SIZE		0
 
 #define CMD_BURN_RESPONSE_SIZE		0
 #define CMD_READY_RESPONSE_SIZE		0
+#define CMD_EMERG_RESPONSE_SIZE		0
+#define CMD_INIT_RESPONSE_SIZE		0
+#define CMD_START_RESPONSE_SIZE		0
+#define CMD_END_RESPONSE_SIZE		0
 
 #define MAX_DATA_SIZE				4
 #define MIN_PACKET_LENGTH			3

@@ -214,6 +214,43 @@ int main(void)
 	}*/
 	// ------------------------------
 
+	
+	
+	// ------------------------------
+	// Test Motor Drivers
+	enable_laser();
+	delay_ms( 10000 );
+
+	
+	for( i = 0; i < 40; i++ )
+	{
+		moveMotors(i,0);
+
+		if( i < 10 )
+		{
+			turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_4 );
+		}
+		else if( i < 20 )
+		{
+			turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_3 );
+		}
+		else if( i < 30 )
+		{
+			turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_2 );
+		}
+		else if( i < 40 )
+		{
+			turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_1 );
+		}
+
+		// Simulate communication time
+		delay_ms( 10 );
+
+	}
+
+	disable_laser();
+	// ------------------------------
+	
 
 	
 	// ------------------------------
@@ -315,117 +352,12 @@ int main(void)
 		{
 			if( burn_ready == TRUE ) { respond_to_burn_cmd( rx_data.data ); }	
 		}
-		
 	}
 	// ------------------------------
 
 
 	return 0;
 }
-//============================================================================
-
-
-
-// Test uart code A
-/*if( packet_ready == 1 )
-{
-	uint8_t rx_packet[MAX_PACKET_LENGTH];
-
-	struct TPacket_Data rx_data;
-	rx_data.data_size = 4;
-	uint16_t rec_size = uart_getp( rx_packet, MAX_PACKET_LENGTH );
-	if( parse_rx_packet( rx_packet, MAX_PACKET_LENGTH, &rx_data ) == 0 )
-	{
-		struct TPacket_Data tx_data;
-		tx_data.command = rx_data.command;
-		tx_data.ack = ACK_MSG;
-		tx_data.data_size = 0;
-
-		uint8_t tx_buff[MAX_PACKET_LENGTH];
-		uint16_t tx_length = pack_tx_packet( tx_data, tx_buff );
-		uart_putp( tx_buff, tx_length );
-	}
-	else
-	{
-		uart_putc( 'e' );
-	}
-}*/
-		
-
-// Test uart code B
-/*
-    uart_puts((char *)"This is a Test of the MSP-430\n\r");
-
-    uart_puts((char *)"PRESS any key to start the test... ");
-
-
-    uint8_t c = uart_getc();
-
-    uart_putc(c);
-
-    uart_puts((char *)"\n\rTest OK!\n\r");
-
-    for( i = 0; i < 256; i++ )
-    {
-    	//uart_putc(48 + (i %10));
-    	//uart_putc('.');
-    	//uart_putc(i);
-    	//uart_putc('|');
-
-    	//uint8_t send_msg[3];
-    	//send_msg[0] = i;
-    	//send_msg[1] = ETX;
-    	//if( i == ETX || i == ESC )
-    	//{
-    	//	send_msg[0] = 0x1B;
-    	//	send_msg[1] = i;
-    	//	send_msg[2] = 0x03;
-    	//}
-
-
-    	uint8_t rec_packet[1024];
-    	uint16_t size = uart_getp( rec_packet, 1024 );
-    	//uart_putp( &size, 1/*size*//* );
-    	uart_putp( rec_packet, size );
-
-
-
-    	//c = uart_getc( );
-    	//uint8_t c2 = uart_getc( );
-    	//uint8_t c3 = uart_getc( );
-    	//uint8_t c4 = uart_getc( );
-		//uart_putc( c );
-		//uart_putc( c2 );
-		//uart_putc( c3 );
-		//uart_putc( c4 );
-
-		if( c == 0x1B && c2 == 8 && c3 == ETX && c4 == 0x04 ) { P1OUT |= DEBUG_LED; }
-
-
-    	//uint8_t rec_packet[1024];
-    	//uint16_t size = uart_getp( rec_packet, 1024 );
-    	//uart_putp( rec_packet, size );
-    	//uart_puts((char *)"\n\r");
-    }
-
-    //volatile unsigned long i;
-    while(1)
-    {
-    	uart_puts((char *)"\n\rEnter 3 Chars, then a String of 8 Chars...\n\r");
-
-    	i = 500000; // Delay to Test the FIFO
-
-    	while (i != 0)
-    	{
-    		i--;
-    	}
-    	uart_putc(uart_getc());
-    	uart_putc(uart_getc());
-    	uart_putc(uart_getc());
-    	uart_gets(test_string,8);
-    	uart_putp(test_string, 8);
-    }
- */
 //============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////

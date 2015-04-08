@@ -31,6 +31,7 @@
 extern volatile uint8_t packet_ready;
 extern volatile uint8_t burn_ready;
 extern volatile uint8_t picture_ip;
+extern volatile uint8_t pi_init;
 extern uint32_t time_ms;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +41,7 @@ int main(void)
 {
 	// ------------------------------
 	// Variable Declaration
-	uint16_t i, j;
+	int16_t i, j;
 	uint16_t time = 0;
 	uint16_t intensity = 0;
 	uint16_t button_pressed1 = FALSE;
@@ -66,9 +67,8 @@ int main(void)
     init_uart();
 	initMotorIO();
 	initWaitTimer();
-	
-	// Indicate to the Pi that everything has been initialized
-	send_MSP_initialized();
+
+	homeLaser();
 	// ------------------------------
 	
 	
@@ -217,35 +217,48 @@ int main(void)
 	
 	
 	// ------------------------------
-	// Test Motor Drivers
+	// Test picture values/spacing
 	enable_laser();
 	delay_ms( 10000 );
 
-	
-	for( i = 0; i < 40; i++ )
+	for( j = 0; j < 10; j++ )
 	{
-		moveMotors(i,0);
+		for( i = 0; i < 50; i++ )
+		{
+			moveMotors(i,2*j);
 
-		if( i < 10 )
-		{
-			turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_4 );
-		}
-		else if( i < 20 )
-		{
-			turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_3 );
-		}
-		else if( i < 30 )
-		{
-			turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_2 );
-		}
-		else if( i < 40 )
-		{
-			turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_1 );
+			turn_on_laser_timed( 123 * 2 * (1+i), 10 * (j+1) );
+
+
+			// if( i < 10 )
+			// {
+				// turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_4 );
+			// }
+			// else if( i < 20 )
+			// {
+				// turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_3 );
+			// }
+			// else if( i < 30 )
+			// {
+				// turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_2 );
+			// }
+			// else if( i < 40 )
+			// {
+				// turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_1 );
+			// }
+
+			// Simulate communication time
+			delay_ms( 10 );
 		}
 
-		// Simulate communication time
-		delay_ms( 10 );
+		for( i = 49; i > 0; i-- )
+		{
+			moveMotors(i,2*j + 1);
 
+			turn_on_laser_timed( 123 * 2 * (1+i), 10 * (j+1) );
+
+			delay_ms( 10 );
+		}
 	}
 
 	disable_laser();
@@ -348,9 +361,22 @@ int main(void)
 		struct TPacket_Data rx_data;
 		check_and_respond_to_msg( &rx_data );
 
-		if( picture_ip == TRUE )
+		if( pi_init != FALSE )
 		{
-			if( burn_ready == TRUE ) { respond_to_burn_cmd( rx_data.data ); }	
+			if( pi_init == JUST_INITIALIZED )
+			{
+				// Indicate to the Pi that everything has been initialized
+				send_MSP_initialized();
+
+				pi_init = TRUE;	// Pi is initialized, and ping has been sent
+			}
+			else
+			{
+				if( picture_ip == TRUE )
+				{
+					if( burn_ready == TRUE ) { respond_to_burn_cmd( rx_data.data ); }
+				}
+			}
 		}
 	}
 	// ------------------------------

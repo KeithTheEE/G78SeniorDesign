@@ -11,6 +11,7 @@ motors.obj: ../time.h
 motors.obj: c:/ti/ccsv6/tools/compiler/msp430_4.3.3/include/stdio.h
 motors.obj: c:/ti/ccsv6/tools/compiler/msp430_4.3.3/include/linkage.h
 motors.obj: c:/ti/ccsv6/tools/compiler/msp430_4.3.3/include/stdarg.h
+motors.obj: ../laser_driver.h
 
 ../motors.c: 
 c:/ti/ccsv6/tools/compiler/msp430_4.3.3/include/stdint.h: 
@@ -23,3 +24,4 @@ c:/ti/ccsv6/tools/compiler/msp430_4.3.3/include/intrinsics.h:
 c:/ti/ccsv6/tools/compiler/msp430_4.3.3/include/stdio.h: 
 c:/ti/ccsv6/tools/compiler/msp430_4.3.3/include/linkage.h: 
 c:/ti/ccsv6/tools/compiler/msp430_4.3.3/include/stdarg.h: 
+../laser_driver.h: 

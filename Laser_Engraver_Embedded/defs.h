@@ -20,6 +20,9 @@
 
 #define FALSE               0
 #define TRUE                1
+#define JUST_INITIALIZED	2
+
+//#define DEBUG
 //============================================================================
 
 
@@ -44,15 +47,15 @@
 #define LASER_INTENSITY_MASK	0x18
 #define LASER_INTENSITY_SHIFT	3
 
-#define LASER_DUR_1				15
-#define LASER_DUR_2				30
-#define LASER_DUR_3				50
+#define LASER_DUR_1				31
+#define LASER_DUR_2				28
+#define LASER_DUR_3				62
 #define LASER_DUR_4				100
 
 #define MAX_INTENSITY 			12300	// 100%
-#define INTENSITY_3 			9225	// 75%
-#define INTENSITY_2 			6150	// 50%
-#define INTENSITY_1 			3075	// 25%
+#define INTENSITY_3 			9840	// 80%
+#define INTENSITY_2 			11070	// 90%
+#define INTENSITY_1 			6458	// 52.5%
 #define FOCUS_INTENSITY 		1230	// 10%
 //============================================================================
 
@@ -61,10 +64,9 @@
 //============================================================================
 // Motor Driver
 
-//#define DEBUG
-// #define PXL2TCK 	1 		// Pixel to ticks ratio assuming 1:1
-#define XHOME 		BIT4 
-// #define YHOME 		BIT45	// TODO: check if this was 4 or 5
+#define TCK2STEP	(double)2							// Tick to step ratio (i.e. Half-Stepping, Full-Stepping, etc.)
+#define STEP2PXL	(double)3							// Step to pixel ratio
+#define PXL2TCK 	(double)1/(TCK2STEP * STEP2PXL);	// Pixel to ticks ratio
 //============================================================================
 
 
@@ -92,12 +94,12 @@
 
 
 // Commands
-#define CMD_BURN		0x0B		// PI  -> MSP : Pi commands the MSP430 to execute a burn pixel operation (payload includes all necessary data)
-#define CMD_PIXEL_READY	0x4D		// MSP -> PI  : MSP has finished previous burn pixel operation and is ready for another (no payload)
-#define CMD_EMERGENCY	0x0D		// MSP -> PI  : MSP has encountered a problem and needs to stop the burn (payload indicates failure condition)
-#define CMD_MSP_INIT	0x01		// MSP -> PI  : MSP is initialized and ready to burn an image (no payload)
-#define CMD_START		0x11		// PI  -> MSP : Pi will commence sending burn pixel commands (no payload)
-#define CMD_END			0x0F		// PI  -> MSP : Pi indicates to the MSP that the picture is complete (no payload)
+#define CMD_BURN		0x0B		// PI     -> MSP    : Pi commands the MSP430 to execute a burn pixel operation (payload includes all necessary data)
+#define CMD_PIXEL_READY	0x4D		// MSP    -> PI     : MSP has finished previous burn pixel operation and is ready for another (no payload)
+#define CMD_EMERGENCY	0x0D		// MSP    -> PI     : MSP has encountered a problem and needs to stop the burn (payload indicates failure condition)
+#define CMD_INIT		0x01		// PI/MSP -> MSP/Pi : Pi/MSP is initialized and ready to proceed (no payload)
+#define CMD_START		0x11		// PI     -> MSP    : Pi will commence sending burn pixel commands (no payload)
+#define CMD_END			0x0F		// PI     -> MSP    : Pi indicates to the MSP that the picture is complete (no payload)
 
 
 #define CMD_BURN_PAYLOAD_SIZE		4

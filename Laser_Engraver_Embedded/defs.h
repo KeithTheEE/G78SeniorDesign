@@ -47,16 +47,18 @@
 #define LASER_INTENSITY_MASK	0x18
 #define LASER_INTENSITY_SHIFT	3
 
+// Length of time (ms) laser is on for each pixel value
 #define LASER_DUR_1				31
 #define LASER_DUR_2				28
 #define LASER_DUR_3				62
 #define LASER_DUR_4				100
 
-#define MAX_INTENSITY 			12300	// 100%
-#define INTENSITY_3 			9840	// 80%
-#define INTENSITY_2 			11070	// 90%
-#define INTENSITY_1 			6458	// 52.5%
+// PWM setting for each pixel value (time laser is on per 12300 ms cycle)
 #define FOCUS_INTENSITY 		1230	// 10%
+#define INTENSITY_1 			6458	// 52.5%
+#define INTENSITY_2 			11070	// 90%
+#define INTENSITY_3 			9840	// 80%
+#define MAX_INTENSITY 			12300	// 100%
 //============================================================================
 
 
@@ -67,6 +69,8 @@
 #define TCK2STEP	(double)2							// Tick to step ratio (i.e. Half-Stepping, Full-Stepping, etc.)
 #define STEP2PXL	(double)3							// Step to pixel ratio
 #define PXL2TCK 	(double)1/(TCK2STEP * STEP2PXL);	// Pixel to ticks ratio
+
+#define TCK_DELAY	96 / TCK2STEP						// Delay for each tick (both high and low)
 //============================================================================
 
 

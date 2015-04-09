@@ -21,9 +21,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-uint32_t time_ms = 0;
+volatile uint32_t time_ms   = 0;
+volatile uint32_t time_10us = 0;
+volatile uint32_t count = 0;
 
-volatile int timerFlag = 0;
+volatile int timer_flag = FALSE;
 volatile uint16_t t=0; //can count 65535 us
 volatile int timer=0;
 
@@ -108,7 +110,7 @@ void init_timer_A0( void )
 
 
 
-void delay_ms( uint32_t delay_ms )
+/*void delay_ms( uint32_t delay_ms )
 {
 	uint32_t initial_count = time_ms;
 	uint32_t final_count = initial_count + delay_ms;
@@ -123,31 +125,48 @@ void delay_ms( uint32_t delay_ms )
 
 
 	return;
+}*/
+
+void delay_ms( uint32_t delay_ms )
+{
+	uint32_t i;
+
+	for( i = 0; i < delay_ms; i++ )
+	{
+		delay_10us( 100 );
+	}
+
+	return;
 }
 //============================================================================
 
 
 
-void initWaitTimer(void){
+void initWaitTimer(void)
+{
   TA1CTL = TASSEL_2 + MC_1+TACLR;
-  TA1CCR0 =  12; //12.28 MHz/12 ~ 1us
-  //TA1CCTL0 |= CCIE; // enable timer 
-  //TA1CCTL0 &= ~CCIE; // disable timer 
+  TA1CCR0 =  123; //12.28 MHz/12 ~ 1us
+
+  TA1CCTL0 &= ~CCIE; // disable timer
+
   return;
 }
 //============================================================================
 
 
 
-void delay_us(unsigned int time){ 
+void delay_10us( uint32_t time_10us )
+{
+	TA1R = 60;
+	timer_flag = FALSE;
+	TA1CCR0 =  123 * time_10us;
+	TA1CCTL0 |= CCIE; // enable timer
 
-  t=0;
-  timer = time;
-  TA1CCTL0 |= CCIE; // enable timer
-  while(timerFlag <0){
-  };  //wait for timer
-  //TA1CCTL0 &= ~CCIE; //disable timer
-  return;
+	while( timer_flag == FALSE );
+
+	TA1CCTL0 &= ~CCIE; // disable timer
+
+	return;
 }
 //============================================================================
 
@@ -169,18 +188,10 @@ __interrupt void TIMERA0_ISR(void)
 
 
 #pragma vector = TIMER1_A0_VECTOR  //CCR0 vector for timerA1
-__interrupt void microSecondTimer(){
-  t+=3; //offset for time it takes to enter and leave interrupt between 2 and 3 us
-  //t++;
-    //P1OUT ^=  BIT5;  
-  if(t > timer){
-    
-    timerFlag =1;
-     t = 0;
-  // P1OUT ^=BIT5;
-  TA1CCTL0 &= ~CCIE; //disable timer
-  
-  }  
+__interrupt void TIMERA1_ISR()
+{
+	//time_10us += 10;
+	timer_flag = TRUE;
 }
 //============================================================================
 

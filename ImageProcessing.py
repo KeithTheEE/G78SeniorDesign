@@ -603,7 +603,7 @@ def takePic():
     return img
     
 # raspi still -o "filename.jpg"
-img = takePic()
+#img = takePic()
 main()
 
 

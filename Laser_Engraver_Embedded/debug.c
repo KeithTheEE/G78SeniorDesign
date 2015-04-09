@@ -22,9 +22,9 @@
 
 void init_debug_LED( void )
 {
+	P1OUT &= ~DEBUG_LED; 				// LED off
 	P1SEL &= ~DEBUG_LED;				// Select I/O
 	P1DIR |=  DEBUG_LED; 				// Set P1.0 to output
-	P1OUT &= ~DEBUG_LED; 				// LED off
 
 	return;
 }
@@ -34,9 +34,9 @@ void init_debug_LED( void )
 
 void init_pcb_LED( void )
 {
-	P3DIR &= ~PCB_LED; 					// LED off
-	P3DIR &= ~PCB_LED;					// Select I/O
-	P3DIR |=  PCB_LED; 					// Set P1.0 to output
+	P3OUT &= ~PCB_LED; 					// LED off
+	P3SEL &= ~PCB_LED;					// Select I/O
+	P3DIR |=  PCB_LED; 					// Set P3.3 to output
 
 	return;
 }

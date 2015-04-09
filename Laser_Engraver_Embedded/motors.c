@@ -53,6 +53,7 @@ void initMotorIO(void)
 	#ifdef DEBUG
 		// X-axis
 		P4DIR |= BIT3; //P4.3 x step - make output
+		P4SEL |= BIT3;
 		P4DIR |= BIT0; //P4.0 x step direction - make output
 
 		// Y-axis
@@ -167,7 +168,7 @@ void initMotorIO(void)
 
 // Move motors - Launchpad
 uint8_t moveMotors( unsigned int Xnew, unsigned int Ynew ){
-
+	volatile uint32_t temp3 = TCK_DELAY;
 	/////////////enable drivers//////////////////////////
 	P6OUT |= BIT0;  //unreset drivers LAUNCHPAD
 	P6OUT &= ~BIT1;  //enable drivers LAUNCHPAD
@@ -190,15 +191,18 @@ uint8_t moveMotors( unsigned int Xnew, unsigned int Ynew ){
 		if(X<Xnew){
 
 			P4OUT |= BIT3;  //set step pin  ONLY FOR LAUNCHPAD TESTING
+			P1OUT |= DEBUG_LED;
 
 
 			//delayMicroseconds(10);
-			delay_ms(1);
+			// delay_ms(1);
+			delay_10us( TCK_DELAY );
 
 			P4OUT &= ~BIT3; //reset step pin
+			P1OUT &= ~DEBUG_LED;
 
 			//delayMicroseconds(5);
-			delay_ms(1);
+			delay_10us( TCK_DELAY );
 			/*
 			P4OUT |= BIT7;  //set step pin
 			 delay_ms(500);
@@ -214,13 +218,16 @@ uint8_t moveMotors( unsigned int Xnew, unsigned int Ynew ){
 
 			//delayMicroseconds(10);
 
-			delay_ms(1);
+			// delay_ms(1);
+			delay_10us( TCK_DELAY );
+			
 
 			P4OUT &= ~BIT3; //reset step pin
 
 
 			//delayMicroseconds(5);
-			delay_ms(1);
+			// delay_ms(1);
+			delay_10us( TCK_DELAY );
 			ticksX -= PXL2TCK;
 		}
 
@@ -248,7 +255,8 @@ uint8_t moveMotors( unsigned int Xnew, unsigned int Ynew ){
 			P3OUT |= BIT7;  //set step pin  ONLY FOR LAUNCHPAD TESTING
 
 			//delayMicroseconds(10);
-			delay_ms(1);
+			// delay_ms(1);
+			delay_10us( TCK_DELAY );
 
 			P3OUT &= ~BIT7; //reset step pin
 
@@ -269,12 +277,14 @@ uint8_t moveMotors( unsigned int Xnew, unsigned int Ynew ){
 
 			//delayMicroseconds(10);
 
-			delay_ms(1);
+			// delay_ms(1);
+			delay_10us( TCK_DELAY );
 
 			P3OUT &= ~BIT7; //reset step pin
 
 			//delayMicroseconds(5);
-			delay_ms(1);
+			// delay_ms(1);
+			delay_10us( TCK_DELAY );
 			ticksY -= PXL2TCK;
 		}
 
@@ -314,12 +324,14 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 			P7OUT |= BIT5;  //set step pin
 
 			//delayMicroseconds(10);
-			delay_ms(1);
+			// delay_ms(1);
+			delay_10us( TCK_DELAY );
 
 			P7OUT &= ~BIT5;
 
 			//delayMicroseconds(5);
-			delay_ms(1);
+			// delay_ms(1);
+			delay_10us( TCK_DELAY );
 			/*
 			P4OUT |= BIT7;  //set step pin
 			delay_ms(500);
@@ -335,12 +347,14 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 
 			//delayMicroseconds(10);
 
-			delay_ms(1);
+			// delay_ms(1);
+			delay_10us( TCK_DELAY );
 
 			P7OUT &= ~BIT5;
 
 			//delayMicroseconds(5);
-			delay_ms(1);
+			// delay_ms(1);
+			delay_10us( TCK_DELAY );
 			ticksX -= PXL2TCK;
 		}
 
@@ -370,12 +384,14 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 			P3OUT |= BIT6;  //set step pin
 
 			//delayMicroseconds(10);
-			delay_ms(1);
+			// delay_ms(1);
+			delay_10us( TCK_DELAY );
 
 			P3OUT &= ~BIT6;
 
 			//delayMicroseconds(5);
-			delay_ms(1);
+			// delay_ms(1);
+			delay_10us( TCK_DELAY );
 			/*
 			P4OUT |= BIT7;  //set step pin
 			delay_ms(500);
@@ -391,12 +407,14 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 
 			//delayMicroseconds(10);
 
-			delay_ms(1);
+			// delay_ms(1);
+			delay_10us( TCK_DELAY );
 
 			P3OUT &= ~BIT6;
 
 			//delayMicroseconds(5);
-			delay_ms(1);
+			// delay_ms(1);
+			delay_10us( TCK_DELAY );
 			ticksY -= PXL2TCK;
 		}
 
@@ -428,13 +446,15 @@ void homeLaser(void){
 
 		//delayMicroseconds(10);
 
-		delay_ms(1);
+		// delay_ms(1);
+		delay_10us( TCK_DELAY );
 
 		P4OUT &= ~BIT3; //reset step pin
 
 
 		//delayMicroseconds(5);
-		delay_ms(1);
+		// delay_ms(1);
+		delay_10us( TCK_DELAY );
 	}
 
 
@@ -446,13 +466,15 @@ void homeLaser(void){
 
 		//delayMicroseconds(10);
 
-		delay_ms(1);
+		// delay_ms(1);
+		delay_10us( TCK_DELAY );
 
 		P3OUT &= ~BIT7; //reset step pin
 
 
 		//delayMicroseconds(5);
-		delay_ms(1);
+		// delay_ms(1);
+		delay_10us( TCK_DELAY );
 	}
 
 	P6OUT &= ~BIT0;  //reset drivers LAUNCHPAD
@@ -476,12 +498,14 @@ void homeLaser(void){
 
 		//delayMicroseconds(10);
 
-		delay_ms(1);
+		// delay_ms(1);
+		delay_10us( TCK_DELAY );
 
 		P7OUT &= ~BIT5;
 
 		//delayMicroseconds(5);
-		delay_ms(1);
+		// delay_ms(1);
+		delay_10us( TCK_DELAY );
 	}
 
 
@@ -492,12 +516,14 @@ void homeLaser(void){
 
 		//delayMicroseconds(10);
 
-		delay_ms(1);
+		// delay_ms(1);
+		delay_10us( TCK_DELAY );
 
 		P3OUT &= ~BIT7; //reset step pin
 
 		//delayMicroseconds(5);
-		delay_ms(1);
+		// delay_ms(1);
+		delay_10us( TCK_DELAY );
 	}
 
 	P4OUT &= ~BIT6;  //reset drivers
@@ -529,7 +555,7 @@ __interrupt void Port_2(void)
 
 		P3OUT &= ~BIT7; //stop stepping
 		homeY = 0;
-		Y=0
+		Y = 0;
 		P2IFG &= ~BIT2; // P2.2 IFG cleared
 	}
 

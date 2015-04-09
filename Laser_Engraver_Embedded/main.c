@@ -41,7 +41,7 @@ int main(void)
 {
 	// ------------------------------
 	// Variable Declaration
-	int16_t i, j;
+	int32_t i, j;
 	uint16_t time = 0;
 	uint16_t intensity = 0;
 	uint16_t button_pressed1 = FALSE;
@@ -63,15 +63,46 @@ int main(void)
 	#endif
 
 	init_clocks();
+	initWaitTimer();
 	init_laser();
     init_uart();
 	initMotorIO();
-	initWaitTimer();
 
-	homeLaser();
+	// homeLaser();
+	//while(1);
 	// ------------------------------
 	
 	
+
+	// ------------------------------
+	// Timing Tests
+	/*while( 1 )
+	{
+		for( i = 0; i < 1; i++ )
+		{
+			//delay_10us(100);
+			delay_ms( 1 );
+		}
+
+		#ifdef DEBUG
+			P1OUT |= DEBUG_LED;
+		#else
+			P3OUT |= PCB_LED;
+		#endif
+
+		for( i = 0; i < 1; i++ )
+		{
+			//delay_10us(100);
+			delay_ms( 1 );
+		}
+
+		#ifdef DEBUG
+			P1OUT &= ~DEBUG_LED;
+		#else
+			P3OUT &= ~PCB_LED;
+		#endif
+	}*/
+
 
 	// ------------------------------
 	// Simulated Checkerboard burn
@@ -205,7 +236,7 @@ int main(void)
 	
 	// ------------------------------
 	// Test Motor Drivers
-/*	while(1)
+	/*while(1)
 	{
        moveMotors(100,100);
        delay_ms( 10 );
@@ -221,13 +252,13 @@ int main(void)
 	enable_laser();
 	delay_ms( 10000 );
 
-	for( j = 0; j < 10; j++ )
+	for( j = 1; j < 11; j++ )
 	{
-		for( i = 0; i < 50; i++ )
+		for( i = 1; i < 51; i++ )
 		{
-			moveMotors(i,2*j);
+			moveMotors( i,2*j-1 );
 
-			turn_on_laser_timed( 123 * 2 * (1+i), 10 * (j+1) );
+			turn_on_laser_timed( 123 * 2 * (i), 10 * (j+1) );
 
 
 			// if( i < 10 )
@@ -248,16 +279,16 @@ int main(void)
 			// }
 
 			// Simulate communication time
-			delay_ms( 10 );
+			delay_ms( 1 );
 		}
 
-		for( i = 49; i > 0; i-- )
+		for( i = 50; i > 0; i-- )
 		{
-			moveMotors(i,2*j + 1);
+			moveMotors(i,2*j);
 
-			turn_on_laser_timed( 123 * 2 * (1+i), 10 * (j+1) );
+			turn_on_laser_timed( 123 * 2 * (i), 10 * (j) );
 
-			delay_ms( 10 );
+			delay_ms( 1 );
 		}
 	}
 

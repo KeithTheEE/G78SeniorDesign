@@ -39,7 +39,7 @@ void delay_ms( uint32_t time_ms );
 void initWaitTimer(void);
 
 
-/*delay_us
+/*delay_10us
 
 * delays for a given number of microseconds
 
@@ -50,7 +50,7 @@ void initWaitTimer(void);
 * RETURN: None
 
 */
-void delay_us(unsigned int time);
+void delay_10us( uint32_t time_10us );
 
 ////////////////////////////////////////////////////////////////////////////////
 

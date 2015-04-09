@@ -13,6 +13,7 @@ uart_fifo.obj: c:/ti/ccsv6/tools/compiler/msp430_4.3.3/include/stdint.h
 uart_fifo.obj: ../time.h
 uart_fifo.obj: c:/ti/ccsv6/tools/compiler/msp430_4.3.3/include/stdio.h
 uart_fifo.obj: ../laser_driver.h
+uart_fifo.obj: ../motors.h
 
 ../uart_fifo.c: 
 c:/ti/ccsv6/tools/compiler/msp430_4.3.3/include/stdio.h: 
@@ -27,3 +28,4 @@ c:/ti/ccsv6/tools/compiler/msp430_4.3.3/include/stdint.h:
 ../time.h: 
 c:/ti/ccsv6/tools/compiler/msp430_4.3.3/include/stdio.h: 
 ../laser_driver.h: 
+../motors.h: 

@@ -19,19 +19,20 @@
 #include "defs.h"
 #include "motors.h"
 #include "time.h"
+#include "laser_driver.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
-volatile double X = 0;  //Current X pixel assuming 
-volatile double Y = 0;  //Current Y pixel assuming
-volatile double ticksX = 0; //global ticks
-volatile double ticksY = 0; //global ticks
-volatile int homeX = 1; //flag for homing x
-volatile int homeY = 1; //flag for homing y
-volatile int lid = 1; //flag for lid
-volatile int skipStep = 1; //flag for homing y
-const double PXL2TCK = 0.125;
+volatile double X = 0;  		//Current X pixel assuming
+volatile double Y = 0;  		//Current Y pixel assuming
+volatile double ticksX = 0; 	//global ticks
+volatile double ticksY = 0; 	//global ticks
+volatile int homeX = 1; 		//flag for homing x
+volatile int homeY = 1; 		//flag for homing y
+volatile int lid = 1; 			//flag for lid
+volatile int skipStep = 1; 		//flag for homing y
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,14 +73,59 @@ void initMotorIO(void)
 	P4OUT |=  BIT6; //P4.6 reset - set high (out of reset)
 	P7OUT &= ~BIT6; //P4.0 enable - set low (enabled)
 
-	P5DIR |= BIT6;  //P5.6 stepping mode - make output
-	P5DIR |= BIT7;  //P5.7 stepping mode - make output
-	P4DIR |= BIT7;  //P4.7 stepping mode - make output
+	P5DIR |= BIT7;  // P5.7 stepping mode (MODE0) - make output
+	P5DIR |= BIT6;  // P5.6 stepping mode (MODE1) - make output
+	P4DIR |= BIT7;  // P4.7 stepping mode (MODE2) - make output
+
+
+	// Configure for full-stepping
+	if( TCK2STEP == (double)1 )
+	{
+		P5OUT &= ~BIT7;  // P5.7 stepping mode (MODE0) - set low
+		P5DIR &= ~BIT6;  // P5.6 stepping mode (MODE1) - set low
+		P4DIR &= ~BIT7;  // P4.7 stepping mode (MODE2) - set low
+	}
 
 	// Configure for half-stepping
-	P5OUT &= ~BIT6;  //P5.6 stepping mode - set low
-	P5OUT |=  BIT7;  //P5.6 stepping mode - set high
-	P5OUT &= ~BIT6;  //P5.6 stepping mode - set low
+	else if( TCK2STEP == (double)2 )
+	{
+		P5OUT |=  BIT7;  // P5.7 stepping mode (MODE0) - set high
+		P5DIR &= ~BIT6;  // P5.6 stepping mode (MODE1) - set low
+		P4DIR &= ~BIT7;  // P4.7 stepping mode (MODE2) - set low
+	}
+
+	// Configure for quarter-stepping
+	else if( TCK2STEP == (double)4 )
+	{
+		P5OUT &= ~BIT7;  // P5.7 stepping mode (MODE0) - set low
+		P5DIR |=  BIT6;  // P5.6 stepping mode (MODE1) - set high
+		P4DIR &= ~BIT7;  // P4.7 stepping mode (MODE2) - set low
+	}
+
+	// Configure for quarter-stepping
+	else if( TCK2STEP == (double)8 )
+	{
+		P5OUT |=  BIT7;  // P5.7 stepping mode (MODE0) - set high
+		P5DIR |=  BIT6;  // P5.6 stepping mode (MODE1) - set high
+		P4DIR &= ~BIT7;  // P4.7 stepping mode (MODE2) - set low
+	}
+
+	// Configure for quarter-stepping
+	else if( TCK2STEP == (double)16 )
+	{
+		P5OUT &= ~BIT7;  // P5.7 stepping mode (MODE0) - set low
+		P5DIR &= ~BIT6;  // P5.6 stepping mode (MODE1) - set low
+		P4DIR |=  BIT7;  // P4.7 stepping mode (MODE2) - set high
+	}
+
+	// Configure for quarter-stepping
+	else if( TCK2STEP == (double)32 )
+	{
+		P5OUT |=  BIT7;  // P5.7 stepping mode (MODE0) - set high
+		P5DIR &= ~BIT6;  // P5.6 stepping mode (MODE1) - set low
+		P4DIR |=  BIT7;  // P4.7 stepping mode (MODE2) - set high
+	}
+
 
 	/////////////////////////// Sets up P2.0 as interrupt//////////////////
 	P2REN |= BIT0; //pull up resistor

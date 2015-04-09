@@ -30,8 +30,8 @@ uint32_t y_pos_buffer[750];
 
 uint16_t buffer_it = 0;
 
-volatile uint8_t burn_ready = FALSE;
-volatile uint8_t picture_ip = FALSE;
+extern volatile uint8_t burn_ready;
+extern volatile uint8_t picture_ip;
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -19,6 +19,7 @@
 #include "uart_fifo.h"
 #include "time.h"
 #include "laser_driver.h"
+#include "motors.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -43,8 +44,9 @@ volatile uint8_t tx_fifo_full;
 volatile uint8_t packet_ip;
 volatile uint8_t packet_ready;
 
-extern volatile uint8_t burn_ready;
-extern volatile uint8_t picture_ip;
+extern volatile uint8_t burn_ready = FALSE;
+extern volatile uint8_t picture_ip = FALSE;
+extern volatile uint8_t pi_init    = FALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -338,6 +340,7 @@ uint16_t parse_rx_packet( uint8_t *rx_buff, uint16_t length, struct TPacket_Data
 			case CMD_BURN  : rx_data->data_size = CMD_BURN_PAYLOAD_SIZE;	break;
 			case CMD_START : rx_data->data_size = CMD_START_PAYLOAD_SIZE;	break;
 			case CMD_END   : rx_data->data_size = CMD_END_PAYLOAD_SIZE;		break;
+			case CMD_INIT  : rx_data->data_size = CMD_INIT_PAYLOAD_SIZE;	break;
 			
 			// If command not recognized, return an error
 			default		   : rx_data->command = NAK_MSG;
@@ -351,7 +354,7 @@ uint16_t parse_rx_packet( uint8_t *rx_buff, uint16_t length, struct TPacket_Data
 			// MSP -> PI
 			case CMD_PIXEL_READY :	rx_data->data_size = CMD_READY_RESPONSE_SIZE;	break;
 			case CMD_EMERGENCY   :	rx_data->data_size = CMD_EMERG_RESPONSE_SIZE;	break;
-			case CMD_MSP_INIT    :	rx_data->data_size = CMD_INIT_RESPONSE_SIZE;	break;
+			case CMD_INIT    	 :	rx_data->data_size = CMD_INIT_RESPONSE_SIZE;	break;
 
 			// If command not recognized, return an error
 			default		         : 	rx_data->command = NAK_MSG;
@@ -583,27 +586,46 @@ void check_and_respond_to_msg( struct TPacket_Data * rx_data )
 		uint16_t rx_size = uart_getp( rx_packet, MAX_PACKET_LENGTH );
 		if( parse_rx_packet( rx_packet, rx_size, &lrx_data ) == 0 )
 		{
-			switch( lrx_data.command )
+			if( lrx_data.command == CMD_BURN )
 			{
-				case CMD_BURN        : send_ack( lrx_data.command, ACK_MSG );
-								       burn_ready = TRUE;
-							           break;
-								 
-				case CMD_START       : send_ack( lrx_data.command, ACK_MSG );
-								       enable_laser();
-								       picture_ip = TRUE;
-								       burn_ready = FALSE;
-							           break;
-				                     
-				case CMD_END   		 : send_ack( lrx_data.command, ACK_MSG );
-									   disable_laser();
-									   picture_ip = FALSE;
-									   break;
-								 
-				case CMD_PIXEL_READY : break;
+				send_ack( lrx_data.command, ACK_MSG );
+				burn_ready = TRUE;
+			}
+			else if( lrx_data.command == CMD_START )
+			{					 
+				send_ack( lrx_data.command, ACK_MSG );
+			    enable_laser();
+				picture_ip = TRUE;
+				burn_ready = FALSE;
 
+				homeLaser();
+			}
+			else if( lrx_data.command == CMD_END )
+			{
+				send_ack( lrx_data.command, ACK_MSG );
+				disable_laser();
+				picture_ip = FALSE;
+
+				homeLaser();
+			}
+			else if( lrx_data.command == CMD_INIT )
+			{
+				if( pi_init == TRUE );
+				{
+					disable_laser();
+					homeLaser();
+
+					// Don't send here (for fear of small chance of infinite recursion)
+					//   Instead, do this in main loop (if 'pi_init == JUST_INITIALIZED')
+					// send_MSP_initialized();
+				}
+
+				pi_init = JUST_INITIALIZED;
+			}
+			else
+			{
 				// Bad commands should be caught in the parsing function
-				default		         :  send_ack( lrx_data.command, NAK_MSG );
+				send_ack( lrx_data.command, NAK_MSG );
 			}
 		}
 		else
@@ -613,6 +635,7 @@ void check_and_respond_to_msg( struct TPacket_Data * rx_data )
 
 		if( rx_data != 0 ) { *rx_data = lrx_data; }
 	}
+
 
 	return;
 }
@@ -661,7 +684,7 @@ void send_ready_for_pixel( void )
 void send_MSP_initialized( void )
 {
 	struct TPacket_Data tx_data;
-	tx_data.command = CMD_MSP_INIT;
+	tx_data.command = CMD_INIT;
 	tx_data.ack = NEW_CMD;
 	tx_data.data_size = 0;					// No payload
 
@@ -701,6 +724,7 @@ void send_burn_stop( void )
 	struct TPacket_Data rx_data;
 	rx_data.ack = 0;
 	rx_data.command = 0;
+
 
 	// Attempt to send the message, waiting for the correct response
 	//   (acknowledgement and burn stop command)

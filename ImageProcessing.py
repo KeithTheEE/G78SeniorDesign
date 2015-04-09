@@ -311,6 +311,10 @@ def serialManager(q, ser, printq):
     print "Sdone Ln 310", Sdone
     return
 def checkerboard():
+    # This function is for milestone 2 in semester 2
+    #   The function builds a checkerboard pattern based on
+    #   'template' and packs in blocks of blockSize pixels
+    #   and then returns it. The returned matrix mimics an image
     thresholdLevels = [51, 102, 153, 204, 255]
     template = [[1,0,2,0,3],\
 		[0,2,0,3,0],\
@@ -328,10 +332,36 @@ def checkerboard():
 	    tempx.append(thresholdLevels[template[x][y]]-1)
 	cb.append(tempx)
 
-    print cb
+    #print cb
 
     return cb
    
+def probBasedRaster(myImg, size):
+    import random
+    imag = Image.open(myImg)
+    imag = imag.convert("L")
+    # Crop Image here
+    # box = (left, upper, right, lower)
+    # imag = Image.crop(box)
+    # reSize Image here to x and y
+    baseWidth = size
+    wpercent = baseWidth/float(imag.size[0])
+    hSize = int((float(imag.size[1])*float(wpercent)))
+    size = (baseWidth, hSize)
+    imag = imag.resize(size, PIL.Image.ANTIALIAS)
+    myA = numpy.array(imag)
+    myA = 255 - myA
+    # now scan image, each pixel level / 255 = prob it will be shown
+    for i in range(myA):
+	for j in range(myA[0]):
+	    lev = myA[i][j]
+	    probLev = random.randint(0, 255)
+	    if probLev >= lev:
+		myA[i][j] = 0 # After inverted, this will be black
+	    else:
+		myA[i][j] = 255 # after inv. this will not be drawn
+
+    return myA
 
 def rasterImage(myImg, size):
     imag = Image.open(myImg)
@@ -340,32 +370,42 @@ def rasterImage(myImg, size):
     # box = (left, upper, right, lower)
     # imag = Image.crop(box)
     # reSize Image here to x and y
-    baseWidth = 1200
+    baseWidth = size
     wpercent = baseWidth/float(imag.size[0])
     hSize = int((float(imag.size[1])*float(wpercent)))
     size = (baseWidth, hSize)
     imag = imag.resize(size, PIL.Image.ANTIALIAS)
-    # **maybe resize before edge filtering **
-    #imag.show()
     myA = numpy.array(imag)
-    tempA = []
-    for i in range(5):
-	for j in range(25):
-	    tempA.append(j*10)
-	for j in range(25):
-	    tempA.append((25-j)*10)
-    tempB = [tempA, tempA, tempA, tempA, tempA]
-    #tempB = checkerboard() 
-    # BLAH
-    myA = numpy.array(tempB)
+    myA = 255 - myA
     return myA
+
+def getThresh(myImg):
+    newArray = myImg
+    hist, bins = numpy.histogram(newArray, 256, [0,256])
+
+    mass = sum(hist)
+    curMass = 0
+    divisions = 4.9
+    thresholdLevels = []
+    for i in range(len(hist)):
+	curMass += hist[i]
+	if curMass >= mass/divisions :
+	    curMass = 0
+	    thresholdLevels.append(i)
+    while True:
+	if len(thresholdLevels) < 4:
+	    thresholdLevels.append(255)
+        elif len(thresholdLevels) > 4:
+	    thresholdLevels = thresholdLevels[0:3]
+	else:
+	    break
+	    
+
+    return thresholdLevels
 
 
 def edgeDetectImage(myImg, size):
-    # Gimp from command line? or inkscape 
-    # 
     imag = Image.open(myImg)
-    imag = imag.filter(ImageFilter.EDGE_ENHANCE)
     imag = imag.filter(ImageFilter.FIND_EDGES)
     imag = imag.convert("L")
 
@@ -373,21 +413,14 @@ def edgeDetectImage(myImg, size):
     # box = (left, upper, right, lower)
     # imag = Image.crop(box)
     # reSize Image here to x and y
-    baseWidth = 1200
+    baseWidth = size
     wpercent = baseWidth/float(imag.size[0])
     hSize = int((float(imag.size[1])*float(wpercent)))
     size = (baseWidth, hSize)
     imag = imag.resize(size, PIL.Image.ANTIALIAS)
     # **maybe resize before edge filtering **
-    imag.show()
-
-
+    #imag.show()
     myA = numpy.array(imag)
-    xSize = len(myA[0])
-    ySize = len(myA)
-    
-    #imag = Image.fromarray(myA)
-    #imag.save(str(folder)+"Filtered"+str(level)+".png")
     return myA
 
 def justPrintIt(q, mode):
@@ -457,19 +490,25 @@ def serial_ports():
     return result
 
     
-def main(myImg, thresholdLevels):
+# ***************** MAIN FLOW CONTROL ***************** #
+
+def main():
+    # Function defaults:
     raster = 0
     edgeDetect = 1
-    mode = raster
-    # Set Thresholds 
-    # Set Size
-    size = (128, 128)
-    # Set Queue
-    q = Queue.Queue()
+    q = Queue.Queue() # Pixel queue
     pq = Queue.Queue() #print queue
-    # Set Serial Ports
+
+    # Runtime Settings:
+    #   Set Size and basics
+    size = 100 # pixels
+    #thresholdLevels = [75, 110, 180, 225]
+    #myImg = "template.png"
+    mode = raster
+    #   Set Serial Ports
     myBaud = 115200
     myTimeO = 0
+
     # Rasp Pi: /dev/ttyAMA0
     # Laptop: check ports: currently ACM0
     defPort = serial_ports()
@@ -487,13 +526,22 @@ def main(myImg, thresholdLevels):
 	serin = ser.read()
 	connected = True
     print "\tSerial Communication Open"
-    #ser.write("Begining Image")
-
+    # Now we wait until the micro is initalized:
+    # this
+    ''' THIS IS ONLY COMMENTED TO TEST, FIX FOR FULL COMM SUPPORT
+    response = 2
+    ser.write(str(0x020103))
+    while resonse > 0:
+	response = rpSerial.receiveX(ser, [0x02, 0x01, 0x03])
+	if response == 1:
+	    ser.write(str(0x020103))
+    '''
 
     # Get image from file or camera 
-    #myImg = "faceAndSuit.png"
-    #myImg = "pumpkins01.png"
+    myImg = takePic()
 
+
+    # Start all threads: Printing thread, Serail com thread, and Edge or Raster Thread
     printThread = printQueueThread(pq, "h")
     threadSerial = serialManagerThread(q, ser, pq)
     # Get matrix for image
@@ -502,6 +550,7 @@ def main(myImg, thresholdLevels):
 	threadPop = populateEDQueueThread(myA, q, thresholdLevels, pq)
     elif (mode == 0):
 	myA = rasterImage(myImg, size)
+	thresholdLevs = getThresh(myA)
 	threadPop = populateRasterQueueThread(myA, q, thresholdLevels, pq)
 
     try:
@@ -522,7 +571,7 @@ def main(myImg, thresholdLevels):
 	# Turns out, when com fails, it sits here.
 	#   Right here. FOREVER.
 	# DON"T BOTHER PRINTING FROM HERE
-	# ...Also, I'm hungry. import food
+	# ...Also, I'm hungry.\n import food
 
     print "EHEHsdfH"
     while not q.empty():
@@ -537,7 +586,7 @@ def main(myImg, thresholdLevels):
     return
 
 
-
+# ************************** START PROG ******************* #
 
 thresholdLevels = [75, 110, 180, 225]
 thresholdLevels = [51, 102, 153, 204]
@@ -555,7 +604,7 @@ def takePic():
     
 # raspi still -o "filename.jpg"
 img = takePic()
-main(img, thresholdLevels)
+main()
 
 
 '''
@@ -586,7 +635,8 @@ Repeat .... all? or just take pic
 make note of version of software
 RSA Encryption
 
-
+Spring Semester 2015
+UNL Electrical and Computer Engeineering
 
 '''
 

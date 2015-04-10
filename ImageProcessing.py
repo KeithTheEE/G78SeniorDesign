@@ -176,7 +176,7 @@ def getLevel(pixel, levels):
 	    break
     return value
 
-def buildpayload(value, xLoc, yLoc, keepOnFlag):
+def buildpayload(value, yLoc, xLoc, keepOnFlag):
     # value: 		2 bits
     # xLoc: 		13 bits
     # yLoc: 		13 bits

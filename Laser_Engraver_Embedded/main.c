@@ -59,7 +59,7 @@ int main(void)
 	#else
 		init_pcb_input();
 		init_pcb_LED();
-		P3OUT |= PCB_LED;	// Turn on the debug LED
+		//P3OUT |= PCB_LED;	// Turn on the debug LED
 	#endif
 
 	init_clocks();
@@ -238,7 +238,7 @@ int main(void)
 	// Test Motor Drivers
 	/*while(1)
 	{
-       moveMotors(100,100);
+       moveMotors(100,0);
        delay_ms( 10 );
        moveMotors(0,0);
        delay_ms( 10 );

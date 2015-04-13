@@ -48,6 +48,11 @@ extern volatile uint8_t burn_ready = FALSE;
 extern volatile uint8_t picture_ip = FALSE;
 extern volatile uint8_t pi_init    = FALSE;
 
+extern volatile uint32_t time_ms;
+
+volatile uint32_t last_rx_time 	     = UINT32_MAX;
+volatile uint32_t pixel_request_time = UINT32_MAX;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -580,6 +585,8 @@ void check_and_respond_to_msg( struct TPacket_Data * rx_data )
 {
 	if( packet_ready == 1 )
 	{
+		last_rx_time = time_ms;
+
 		uint8_t rx_packet[MAX_PACKET_LENGTH];
 
 		struct TPacket_Data lrx_data;
@@ -597,6 +604,9 @@ void check_and_respond_to_msg( struct TPacket_Data * rx_data )
 			    enable_laser();
 				picture_ip = TRUE;
 				burn_ready = FALSE;
+
+				// Since a burn pixel command should be imminent, start the timer for the timeout
+				pixel_request_time = time_ms;
 
 				//homeLaser();
 			}
@@ -635,6 +645,18 @@ void check_and_respond_to_msg( struct TPacket_Data * rx_data )
 
 		if( rx_data != 0 ) { *rx_data = lrx_data; }
 	}
+	else
+	{
+		if( pixel_request_time != UINT32_MAX )
+		{
+			int32_t time_since_rq  = time_ms - pixel_request_time;
+
+			if( time_since_rq > PIXEL_TIMEOUT )
+			{
+				halt_burn();
+			}
+		}
+	}
 
 
 	return;
@@ -672,6 +694,10 @@ void send_ready_for_pixel( void )
 	if( !( rx_data.ack == ACK_MSG && rx_data.command == tx_data.command ) )
 	{
 		halt_burn();
+	}
+	else
+	{
+		pixel_request_time = time_ms;
 	}
 
 

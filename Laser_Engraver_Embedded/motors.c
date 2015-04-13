@@ -33,12 +33,18 @@ volatile int homeY = 1; 		//flag for homing y
 volatile int lid = 1; 			//flag for lid
 volatile int skipStep = 1; 		//flag for homing y
 
+uint32_t accel_delay[ACCEL_SIZE];
+
+extern volatile uint8_t picture_ip;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
 void initMotorIO(void)
 {
+	uint16_t i;
+
 	// enable/reset drivers
 
 	#ifdef DEBUG
@@ -136,11 +142,19 @@ void initMotorIO(void)
 	P2IE  |= BIT0;
 	///////////////////////////////////////////////////////////////
 
+	/////////////////////////// Sets up P2.1 as interrupt//////////////////
+	P2REN |= BIT1; //pull up resistor
+	P2OUT |= BIT1;
+	P2IES |= BIT1; // ISR triggered hi-lo transition
+	P2IFG &= ~BIT1; // P2.1 IFG cleared
+	P2IE  |= BIT1;
+	///////////////////////////////////////////////////////////////
+
 	/////////////////////////// Sets up P2.2 as interrupt//////////////////
 	P2REN |= BIT2;  // pull up resistor
 	P2OUT |= BIT2;
 	P2IES |= BIT2;  // ISR triggered hi-lo transition
-	P2IFG &= ~BIT2; // P2.0 IFG cleared
+	P2IFG &= ~BIT2; // P2.2 IFG cleared
 	P2IE  |= BIT2;
 	///////////////////////////////////////////////////////////////
 
@@ -154,6 +168,16 @@ void initMotorIO(void)
 		P2DIR &= ~BIT3; //P2.3 Y home - make input
 	#endif
 	/////////////////////////////////////////////////////////////////////
+
+
+
+	// Setup acceleration vector
+	double accel_factors[] = ACCEL_FACTORS;
+
+	for( i = 0; i < ACCEL_SIZE; i++ )
+	{
+		accel_delay[i] = MIN_TCK_DELAY * accel_factors[i];
+	}
 
 	_BIS_SR(GIE);          	// interrupts enabled
 
@@ -193,40 +217,24 @@ uint8_t moveMotors( unsigned int Xnew, unsigned int Ynew ){
 			P4OUT |= BIT3;  //set step pin  ONLY FOR LAUNCHPAD TESTING
 			P1OUT |= DEBUG_LED;
 
-
-			//delayMicroseconds(10);
-			// delay_ms(1);
 			delay_10us( TCK_DELAY );
 
 			P4OUT &= ~BIT3; //reset step pin
 			P1OUT &= ~DEBUG_LED;
 
-			//delayMicroseconds(5);
 			delay_10us( TCK_DELAY );
-			/*
-			P4OUT |= BIT7;  //set step pin
-			 delay_ms(500);
-			 P4OUT &= ~BIT7; //reset step pin
-			 */
 
 			ticksX += PXL2TCK;
 		}
 		else if(X>Xnew){
 
-			//P4OUT &= ~BIT0; //negative direction ONLY FOR LAUNCHPAD TESTING
 			P4OUT |= BIT3;  //set step pin ONLY FOR LAUNCHPAD TESTING
 
-			//delayMicroseconds(10);
-
-			// delay_ms(1);
 			delay_10us( TCK_DELAY );
 			
 
 			P4OUT &= ~BIT3; //reset step pin
 
-
-			//delayMicroseconds(5);
-			// delay_ms(1);
 			delay_10us( TCK_DELAY );
 			ticksX -= PXL2TCK;
 		}
@@ -251,39 +259,24 @@ uint8_t moveMotors( unsigned int Xnew, unsigned int Ynew ){
 
 		if(Y<Ynew){
 
-			// P8OUT |= BIT2;  //positive direction ONLY FOR LAUNCHPAD TESTING
 			P3OUT |= BIT7;  //set step pin  ONLY FOR LAUNCHPAD TESTING
 
-			//delayMicroseconds(10);
-			// delay_ms(1);
 			delay_10us( TCK_DELAY );
 
 			P3OUT &= ~BIT7; //reset step pin
 
-			//delayMicroseconds(5);
 			delay_ms(1);
-			/*
-			P4OUT |= BIT7;  //set step pin
-			delay_ms(500);
-			P4OUT &= ~BIT7; //reset step pin
-			*/
 
 			ticksY += PXL2TCK;
 		}
 		else if(Y>Ynew){
 
-			// P8OUT &= ~BIT2;  // Negative direction ONLY FOR LAUNCHPAD TESTING
 			P3OUT |= BIT7;   // Set step pin ONLY FOR LAUNCHPAD TESTING
 
-			//delayMicroseconds(10);
-
-			// delay_ms(1);
 			delay_10us( TCK_DELAY );
 
 			P3OUT &= ~BIT7; //reset step pin
 
-			//delayMicroseconds(5);
-			// delay_ms(1);
 			delay_10us( TCK_DELAY );
 			ticksY -= PXL2TCK;
 		}
@@ -301,6 +294,13 @@ uint8_t moveMotors( unsigned int Xnew, unsigned int Ynew ){
 // Move motors - PCB
 uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 
+	uint16_t xDiff;
+	uint16_t yDiff;
+	uint16_t i = 0;
+	uint16_t it_skip = 1;
+	uint16_t accel_it = 0;
+	uint16_t num_accel_it = ACCEL_SIZE;
+
 	/////////////enable drivers//////////////////////////
 	P4OUT |= BIT6;  //unreset drivers
 	P7OUT &= ~BIT6;  //enable drivers
@@ -310,33 +310,41 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 	if(X<Xnew)
 	{
 		P7OUT |= BIT7;  //positive direction
+		xDiff = ( Xnew - X ) * TCK2PXL;
 	}
 	else
 	{
 		P7OUT &= ~BIT7;  //negative direction
+		xDiff = ( X - Xnew ) * TCK2PXL;
 	}
+
+	if( xDiff < ACCEL_SIZE )
+	{
+		it_skip = ACCEL_SIZE / ( xDiff / 2 );
+		accel_it = ACCEL_SIZE - 1 - ( it_skip * ( xDiff / 2 - 1 ) );
+	}
+	else if( xDiff < ( 2 * ACCEL_SIZE ) )
+	{
+		accel_it = ACCEL_SIZE - ( xDiff / 2 );
+		num_accel_it = ACCEL_SIZE - accel_it;
+	}
+
+	num_accel_it /= it_skip;
+
+
 	/////////////////////////////////////////////////////////
 
 
-	while( ( X - Xnew ) > .001 || ( X - Xnew ) < -.001 ){
+	/*while( ( X - Xnew ) > .001 || ( X - Xnew ) < -.001 ){
 		if(X<Xnew){
 
 			P7OUT |= BIT5;  //set step pin
 
-			//delayMicroseconds(10);
-			// delay_ms(1);
 			delay_10us( TCK_DELAY );
 
 			P7OUT &= ~BIT5;
 
-			//delayMicroseconds(5);
-			// delay_ms(1);
 			delay_10us( TCK_DELAY );
-			/*
-			P4OUT |= BIT7;  //set step pin
-			delay_ms(500);
-			P4OUT &= ~BIT7; //reset step pin
-			*/
 
 			ticksX += PXL2TCK;
 		}
@@ -345,20 +353,46 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 			//  P7OUT &= ~BIT7; //negative direction
 			P7OUT |= BIT5;  //set step pin
 
-			//delayMicroseconds(10);
-
-			// delay_ms(1);
 			delay_10us( TCK_DELAY );
 
 			P7OUT &= ~BIT5;
 
-			//delayMicroseconds(5);
-			// delay_ms(1);
 			delay_10us( TCK_DELAY );
 			ticksX -= PXL2TCK;
 		}
 
 		X = ticksX; //move to end of while
+	}*/
+
+	for( i = 0; i < xDiff; i++ )
+	{
+		volatile uint16_t temp4 = accel_delay[accel_it];
+		P7OUT |= BIT5;  //set step pin
+
+		delay_10us( accel_delay[accel_it] );
+
+		P7OUT &= ~BIT5;
+
+		delay_10us( accel_delay[accel_it] );
+
+
+		if(X<Xnew)
+		{
+			X += PXL2TCK;
+		}
+		else
+		{
+			X -= PXL2TCK;
+		}
+
+		if( i < ( num_accel_it - 1 ) )
+		{
+			accel_it += it_skip;
+		}
+		else if( i > ( xDiff - num_accel_it - 1 ) )
+		{
+			accel_it -= it_skip;
+		}
 	}
 	/////////////////////////////////////////////////////////
 
@@ -366,38 +400,29 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 	////////////////Set Y Direction//////////////////////////
 	if(Y<Ynew)
 	{
-		P8OUT |= BIT2;  //positive direction ONLY FOR LAUNCHPAD TESTING
 		P4OUT |= BIT0;  //positive direction
+		yDiff = ( Ynew - Y ) * TCK2PXL;
 	}
 	else
 	{
-		P8OUT &= ~BIT2;  //positive direction ONLY FOR LAUNCHPAD TESTING
 		P4OUT &= ~BIT0;  //positive direction
+		yDiff = ( Ynew - Y ) * TCK2PXL;
 	}
 
 
-	while( ( Y - Ynew ) > .001 || ( Y - Ynew ) < -.001 ){
+
+	/*while( ( Y - Ynew ) > .001 || ( Y - Ynew ) < -.001 ){
 
 		if(Y<Ynew){
 
 			// P4OUT |= BIT0;  //positive direction
 			P3OUT |= BIT6;  //set step pin
 
-			//delayMicroseconds(10);
-			// delay_ms(1);
 			delay_10us( TCK_DELAY );
 
 			P3OUT &= ~BIT6;
 
-			//delayMicroseconds(5);
-			// delay_ms(1);
 			delay_10us( TCK_DELAY );
-			/*
-			P4OUT |= BIT7;  //set step pin
-			delay_ms(500);
-			P4OUT &= ~BIT7; //reset step pin
-			*/
-
 			ticksY += PXL2TCK;
 		}
 		else if(Y>Ynew){
@@ -405,20 +430,36 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 			// P4OUT &= ~BIT0; // Negative direction
 			P3OUT |= BIT6;  // Set step pin
 
-			//delayMicroseconds(10);
-
-			// delay_ms(1);
 			delay_10us( TCK_DELAY );
 
 			P3OUT &= ~BIT6;
 
-			//delayMicroseconds(5);
-			// delay_ms(1);
 			delay_10us( TCK_DELAY );
 			ticksY -= PXL2TCK;
 		}
 
 		Y = ticksY; //move to end of while
+	}*/
+
+	for( i = 0; i < yDiff; i++ )
+	{
+		P3OUT |= BIT6;  //set step pin
+
+		delay_10us( accel_delay[accel_it] );
+
+		P3OUT &= ~BIT6;
+
+		delay_10us( accel_delay[accel_it] );
+
+
+		if(Y<Ynew)
+		{
+			Y += PXL2TCK;
+		}
+		else
+		{
+			Y -= PXL2TCK;
+		}
 	}
 	/////////////////////////////////////////////////////////
 
@@ -444,16 +485,10 @@ void homeLaser(void){
 		//P4OUT &= ~BIT0; //negative direction ONLY FOR LAUNCHPAD TESTING
 		P4OUT |= BIT3;  //set step pin ONLY FOR LAUNCHPAD TESTING
 
-		//delayMicroseconds(10);
-
-		// delay_ms(1);
 		delay_10us( TCK_DELAY );
 
 		P4OUT &= ~BIT3; //reset step pin
 
-
-		//delayMicroseconds(5);
-		// delay_ms(1);
 		delay_10us( TCK_DELAY );
 	}
 
@@ -464,16 +499,10 @@ void homeLaser(void){
 		// P8OUT &= ~BIT2;  // Negative direction ONLY FOR LAUNCHPAD TESTING
 		P3OUT |= BIT7;   // Set step pin ONLY FOR LAUNCHPAD TESTING
 
-		//delayMicroseconds(10);
-
-		// delay_ms(1);
 		delay_10us( TCK_DELAY );
 
 		P3OUT &= ~BIT7; //reset step pin
 
-
-		//delayMicroseconds(5);
-		// delay_ms(1);
 		delay_10us( TCK_DELAY );
 	}
 
@@ -496,16 +525,11 @@ void homeLaser(void){
 		//P7OUT &= ~BIT7; //negative direction
 		P7OUT |= BIT5;  //set step pin
 
-		//delayMicroseconds(10);
-
-		// delay_ms(1);
-		delay_10us( TCK_DELAY );
+		delay_10us( HOME_TCK_DELAY );
 
 		P7OUT &= ~BIT5;
 
-		//delayMicroseconds(5);
-		// delay_ms(1);
-		delay_10us( TCK_DELAY );
+		delay_10us( HOME_TCK_DELAY );
 	}
 
 
@@ -514,16 +538,11 @@ void homeLaser(void){
 		// P4OUT &= ~BIT0; // Negative direction
 		P3OUT |= BIT6;  // Set step pin
 
-		//delayMicroseconds(10);
-
-		// delay_ms(1);
-		delay_10us( TCK_DELAY );
+		delay_10us( HOME_TCK_DELAY );
 
 		P3OUT &= ~BIT7; //reset step pin
 
-		//delayMicroseconds(5);
-		// delay_ms(1);
-		delay_10us( TCK_DELAY );
+		delay_10us( HOME_TCK_DELAY );
 	}
 
 	P4OUT &= ~BIT6;  //reset drivers
@@ -578,6 +597,8 @@ __interrupt void Port_2(void)
 		homeX = 0;
 		X=0;
 		P2IFG &= ~BIT0; // P2.0 IFG cleared
+
+		P3OUT |= PCB_LED;	// Turn on the debug LED
 	}
 	if(P2IV_P2IFG1){   //YHOME P2.1 interrupt
 
@@ -585,12 +606,17 @@ __interrupt void Port_2(void)
 		homeY = 0;
 		Y =0;
 		P2IFG &= ~BIT1; // P2.1 IFG cleared
+
+		P3OUT &= ~PCB_LED;	// Turn on the debug LED
 	}
 	if(P2IV_P2IFG2){   // Lid P2.2 interrupt
 		lid = 0;
 
 		// need to shut down laser here
-		halt_burn();
+		if( picture_ip == TRUE )
+		{
+			halt_burn();
+		}
 
 		P2IFG &= ~BIT2; // P2.2 IFG cleared
 	}

@@ -5,10 +5,10 @@ import numpy
 import glob
 import os, sys
 #import subprocess
-import Tkinter
-import Image, ImageTk
-from Tkinter import *
-from PIL import ImageTk, Image
+#import Tkinter
+#import Image, ImageTk
+#from Tkinter import *
+#from PIL import ImageTk, Image
 import RPi.GPIO as GPIO
 import time
 

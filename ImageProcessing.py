@@ -8,6 +8,7 @@ import Queue
 import serial
 import sys
 import rpSerial
+import RPi.GPIO as GPIO
 import glob
 import picamera
 from time import sleep
@@ -79,6 +80,67 @@ fe:03:
 02:0b:00:1b:02:00:00:fe:03:
 02:0b:00:1b:02:00:00:fe:03
 
+pin setup on PI
+1   2
+3   4
+5   6
+7   8
+9  10
+11 12
+13 14
+15 16
+17 18
+19 20
+21 22 
+23 24
+25 26
+
+
+Pin Numbers	RPi.GPIO	Raspberry Pi Name	BCM2835		USED AS
+P1_01		1		3V3	 
+P1_02		2		5V0	 
+P1_03		3		SDA0			GPIO0
+P1_04		4		DNC	 
+P1_05		5		SCL0			GPIO1
+P1_06		6		GND	 				GND
+P1_07		7		GPIO7			GPIO4
+P1_08		8		TXD			GPIO14		TXD
+P1_09		9		DNC	 
+P1_10		10		RXD			GPIO15		RXD
+P1_11		11		GPIO0			GPIO17	
+P1_12		12		GPIO1			GPIO18
+P1_13		13		GPIO2			GPIO21
+P1_14		14		DNC	 
+P1_15		15		GPIO3			GPIO22
+P1_16		16		GPIO4			GPIO23
+P1_17		17		DNC	 
+P1_18		18		GPIO5			GPIO24
+P1_19		19		SPI_MOSI		GPIO10
+P1_20		20		DNC	 
+P1_21		21		SPI_MISO		GPIO9
+P1_22		22		GPIO6			GPIO25
+P1_23		23		SPI_SCLK		GPIO11
+P1_24		24		SPI_CE0_N		GPIO8
+P1_25		25		DNC	 
+P1_26		26		SPI_CE1_N		GPIO7
+
+
+pin setup on PI
+	1   2 
+	3   4
+	5   6  --GND
+	7   8  --TXD->MSP:RXD
+	9  10  --RXD<-MSP:TXD
+	11 12  --Pic 
+	13 14
+	15 16
+	17 18
+	19 20
+	21 22 
+	23 24
+	25 26
+
+
 '''
 # this is used to make sure the threads stay active as long as 
 #   there is still data to transmit
@@ -133,6 +195,25 @@ class populateRasterQueueThread(threading.Thread):
     def stopped(self):
 	return self._stop.isSet()
 
+class dealWithImageThread(threading.Thread):
+    # Used in place of basic edge detect,
+    #   This does raster image processing
+    def __init__(self, q, pq, mode, ser):
+	threading.Thread.__init__(self)
+	self.name = "ImageEverything"
+	self.daemon = True
+	self.q = q
+	self.mode = mode
+	self.pq = pq
+	self.ser = ser
+    def run(self):
+	self.pq.put(("M", "Image Processing Begining"))
+	runImageSide(self.mode, self.q, self.pq, self.ser)
+    def stop(self):
+	self._stop.set()
+    def stopped(self):
+	return self._stop.isSet()
+
 class serialManagerThread(threading.Thread):
     # Handles serial communication between Pi and MSP
     def __init__(self, q, ser, pq):
@@ -166,6 +247,39 @@ class printQueueThread(threading.Thread):
 	self._stop.set()
     def stopped(self):
 	return self._stop.isSet()
+
+def runImageSide(mode, q, pq, ser):
+    while True:
+	# Take Picture
+	myImg = takePic()
+	# Start Image command
+	response = 2
+	ser.write(str(0x021103))
+	while resonse > 0:
+	    response = rpSerial.receiveX(ser, [0x02, 0x06, 0x11, 0x03])
+	    if response == 1:
+		ser.write(str(0x021103))
+	# Process Image and populate in serial Q
+	if (mode == 1):
+	    myA = edgeDetectImage(myImg, size)
+	    thresholdLevs = getThresh(myA)
+	    threadPop = edQ(myA, q, thresholdLevels, pq)
+	elif (mode == 0):
+	    myA = rasterImage(myImg, size)
+	    thresholdLevs = getThresh(myA)
+	    threadPop = rasterQ(myA, q, thresholdLevels, pq)
+   	time.sleep(05)
+	# Wait for all of the image to be done being processed
+	while not q.empty():
+	    time.sleep(1)
+	time.sleep(3)
+	# Send end of image command
+	ser.write(str(0x020f03))
+	while resonse > 0:
+	    response = rpSerial.receiveX(ser, [0x02, 0x06, 0x0F, 0x03])
+	    if response == 1:
+		ser.write(str(0x020F03))
+    return
 
 def getLevel(pixel, levels):
     # takes a pixel input, and returns the laser intensity
@@ -229,6 +343,12 @@ End	0x03
     payload = payload | keepOnFlag    
     #print format(payload, '02x')
     return payload
+
+def rasterMode(q, printq):
+    # Go to take Pic fun, wait for Image to be armed
+    # And for user to push button
+    myImg = takePic()
+
 
 def rasterQ(imagA, q, levels, printq):
     msg = ("M", "Running RASTER")
@@ -418,7 +538,7 @@ def edgeDetectImage(myImg, size):
     hSize = int((float(imag.size[1])*float(wpercent)))
     size = (baseWidth, hSize)
     imag = imag.resize(size, PIL.Image.ANTIALIAS)
-    # **maybe resize before edge filtering **
+    # **maybe resize before edge filtering ** NOPE
     #imag.show()
     myA = numpy.array(imag)
     return myA
@@ -528,39 +648,43 @@ def main():
     print "\tSerial Communication Open"
     # Now we wait until the micro is initalized:
     # this
-    ''' THIS IS ONLY COMMENTED TO TEST, FIX FOR FULL COMM SUPPORT
+    # THIS IS ONLY COMMENTED TO TEST, FIX FOR FULL COMM SUPPORT
+    
     response = 2
     ser.write(str(0x020103))
     while resonse > 0:
 	response = rpSerial.receiveX(ser, [0x02, 0x01, 0x03])
 	if response == 1:
 	    ser.write(str(0x020103))
-    '''
+    ser.write(str(0x02060103))
 
-    # Get image from file or camera 
-    myImg = takePic()
+    # Get image from file or camera =>MOVE IN WITHIN IMAGING FUNCTIONS
+    #myImg = takePic()
 
 
     # Start all threads: Printing thread, Serail com thread, and Edge or Raster Thread
     printThread = printQueueThread(pq, "h")
     threadSerial = serialManagerThread(q, ser, pq)
+    imageThread =  dealWithImageThread(q, pq, mode, ser)
     # Get matrix for image
+    '''
     if (mode == 1):
-	myA = edgeDetectImage(myImg, size)
+	#myA = edgeDetectImage(myImg, size)
 	threadPop = populateEDQueueThread(myA, q, thresholdLevels, pq)
     elif (mode == 0):
-	myA = rasterImage(myImg, size)
-	thresholdLevs = getThresh(myA)
+	#myA = rasterImage(myImg, size)
+	#thresholdLevs = getThresh(myA)
 	threadPop = populateRasterQueueThread(myA, q, thresholdLevels, pq)
-
+    '''
     try:
+	imageThread.start()
 	printThread.start()
-	threadPop.start()
+	#threadPop.start()
 	threadSerial.start()
     except(KeyboardInterrupt, SystemExit):
 	print "Shutting Down"
 	printThread.stop()
-	threadPop.stop()
+	imageThread.stop()
 	threadSerial.stop()
 	ser.close()
 
@@ -573,13 +697,14 @@ def main():
 	# DON"T BOTHER PRINTING FROM HERE
 	# ...Also, I'm hungry.\n import food
 
-    print "EHEHsdfH"
-    while not q.empty():
-	time.sleep(1)
-	pass
-    print "EHEH245H"
-    time.sleep(10)
-
+   # print "EHEHsdfH"
+    #while not q.empty():
+	#time.sleep(1)
+	#pass
+    #print "EHEH245H"
+    #time.sleep(10)
+    while True:
+	time.sleep(10)
     ser.close()
 
 
@@ -592,12 +717,21 @@ thresholdLevels = [75, 110, 180, 225]
 thresholdLevels = [51, 102, 153, 204]
 myImg = "template.png"
 
+# Ok, so we're starting the package on the 'top' frame
+#
 
 def takePic():
     img = 'template.png'
     camera = picamera.PiCamera()
     camera.start_preview()
-    sleep(3)
+    button = 12
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setwarnings(False)
+    GPIO.setup(button, GPIO.IN)
+    buttonState = GPIO.input(button)
+    while True:
+	if buttonState != GPIO.input(button):
+	    break	
     camera.capture(img)
     camera.stop_preview()
     return img

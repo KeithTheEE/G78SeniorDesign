@@ -49,13 +49,17 @@ disable the process on the gpio pin
     # Start 	0x02
     # Command	0x1B
     # End	0x03
+init	= 0x01
 startX 	= 0x02
 endX 	= 0x03
 acknow 	= 0x06
 burn 	= 0x0B
+endIm	= 0x0F
+startIm	= 0x11
 esc 	= 0x1B
 error	= 0x3f
 readyB 	= 0x4d
+emerg	= 0x0d
 
 startXc 	= "0x02"
 endXc 		= "0x03"
@@ -64,6 +68,7 @@ burnc 		= "0x0B"
 escc		= "0x1B"
 errorc		= "0x3f"
 readyBc 	= "0x4d"
+emergc 		= "0x0d"
 
 def hexParse(rawMsg):
     # Parsing

@@ -147,6 +147,7 @@ def testGPIO():
 	    break
     GPIO.output(led, True)
     time.sleep(3)
+    GPIO.output(led, False)
     return
 #main()
 

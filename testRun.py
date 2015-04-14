@@ -12,7 +12,7 @@ import os, sys
 import RPi.GPIO as GPIO
 import time
 
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 
 
 #root = Tk()
@@ -137,6 +137,7 @@ def main():
 def testGPIO():
     led = 11
     button = 12
+    GPIO.setmode(GPIO.BOARD)
     GPIO.setup(led, GPIO.OUT)
     GPIO.setup(button, GPIO.IN)
     GPIO.output(led, False)

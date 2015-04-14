@@ -66,11 +66,22 @@
 //============================================================================
 // Motor Driver
 
-#define TCK2STEP	(double)2							// Tick to step ratio (i.e. Half-Stepping, Full-Stepping, etc.)
+#define TCK2STEP	2									// Tick to step ratio (i.e. Half-Stepping, Full-Stepping, etc.)
+														//   Note: Not really set up for less than eighth-stepping
 #define STEP2PXL	(double)3							// Step to pixel ratio
+#define TCK2PXL		(uint16_t)TCK2STEP * STEP2PXL
 #define PXL2TCK 	(double)1/(TCK2STEP * STEP2PXL);	// Pixel to ticks ratio
 
-#define TCK_DELAY	96 / TCK2STEP						// Delay for each tick (both high and low)
+#define TCK_DELAY			96 / TCK2STEP						// Delay for each tick (both high and low)
+#define MIN_TCK_DELAY		48 / TCK2STEP						// Minimum tick delay (maximum speed)
+#define MIN_TCK_DELAY_DIV2	MIN_TCK_DELAY / 2
+#define MAX_TCK_DELAY		8 * MIN_TCK_DELAY					// Minimum tick delay (maximum speed)
+#define HOME_TCK_DELAY		384 / TCK2STEP						// Delay for each tick (homing speed)
+
+
+#define ACCEL_FACTORS 		{ 7.614640733, 3.154087464, 2.420216434, 2.040336835, 1.797572837, 1.625130067, 1.494461332, 1.391010692, 1.306465805, 1.235686081, 1.175297945, 1.122983037, 1.077088345, 1.036399139, 1 }
+#define ACCEL_SIZE			15
+
 //============================================================================
 
 
@@ -127,6 +138,7 @@
 
 
 #define MAX_ATTEMPTS				3
+#define PIXEL_TIMEOUT				3000 	// milliseconds
 //============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////

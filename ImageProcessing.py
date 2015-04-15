@@ -298,7 +298,7 @@ def runImageSide(mode, q, pq, ser, size):
 	    threadPop = rasterQ(myA, q, thresholdLevels, pq)
    	time.sleep(05)
 	# Wait for all of the image to be done being processed
-	while not q.empty():
+	while q.qsize() > 0:
 	    time.sleep(1)
 	print "HEYEYEYEYYEEY"
 	time.sleep(3)
@@ -447,7 +447,7 @@ def serialManager(q, ser, printq):
     pixCount = 0
     i = 0
     while True:
-	if not q.empty():
+	if q.qsize() > 0:
 	    rpSerial.rpSerialManager(q, ser)
 	else:
 	    time.sleep(1)
@@ -742,7 +742,7 @@ def main():
     #while not q.empty():
 	#time.sleep(1)
 	#pass
-    #print "EHEH245H"
+    print "EHEH245H"
     #time.sleep(10)
     while True:
 	time.sleep(10)

@@ -777,6 +777,7 @@ def takePic():
 	    break	
     camera.capture(img)
     camera.stop_preview()
+    camera.close()
     return img
     
 # raspi still -o "filename.jpg"

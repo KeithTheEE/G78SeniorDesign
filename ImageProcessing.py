@@ -212,7 +212,7 @@ class populateRasterQueueThread(threading.Thread):
 class dealWithImageThread(threading.Thread):
     # Used in place of basic edge detect,
     #   This does raster image processing
-    def __init__(self, q, pq, mode, ser):
+    def __init__(self, q, pq, mode, ser, size):
 	threading.Thread.__init__(self)
 	self.name = "ImageEverything"
 	self.daemon = True
@@ -220,9 +220,10 @@ class dealWithImageThread(threading.Thread):
 	self.mode = mode
 	self.pq = pq
 	self.ser = ser
+	self.size = size
     def run(self):
 	self.pq.put(("M", "Image Processing Begining"))
-	runImageSide(self.mode, self.q, self.pq, self.ser)
+	runImageSide(self.mode, self.q, self.pq, self.ser, self.size)
     def stop(self):
 	self._stop.set()
     def stopped(self):
@@ -262,7 +263,7 @@ class printQueueThread(threading.Thread):
     def stopped(self):
 	return self._stop.isSet()
 
-def runImageSide(mode, q, pq, ser):
+def runImageSide(mode, q, pq, ser, size):
     while True:
 	# Take Picture
 	myImg = takePic()
@@ -687,7 +688,7 @@ def main():
     # Start all threads: Printing thread, Serail com thread, and Edge or Raster Thread
     printThread = printQueueThread(pq, "h")
     threadSerial = serialManagerThread(q, ser, pq)
-    imageThread =  dealWithImageThread(q, pq, mode, ser)
+    imageThread =  dealWithImageThread(q, pq, mode, ser, size)
     # Get matrix for image
     '''
     if (mode == 1):

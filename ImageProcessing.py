@@ -650,7 +650,7 @@ def main():
     # Now we wait until the micro is initalized:
     # this
     # THIS IS ONLY COMMENTED TO TEST, FIX FOR FULL COMM SUPPORT
-    
+    '''
     response = 2
     time.sleep(1)
     ser.write(str(0x020103))
@@ -663,6 +663,7 @@ def main():
 
     # Get image from file or camera =>MOVE IN WITHIN IMAGING FUNCTIONS
     #myImg = takePic()
+    '''
 
 
     # Start all threads: Printing thread, Serail com thread, and Edge or Raster Thread

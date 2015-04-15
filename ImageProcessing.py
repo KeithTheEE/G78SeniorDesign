@@ -8,7 +8,7 @@ import Queue
 import serial
 import sys
 import rpSerial
-#import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 import glob
 import picamera
 from time import sleep
@@ -729,13 +729,13 @@ def takePic():
     camera = picamera.PiCamera()
     camera.start_preview()
     button = 12
-    #GPIO.setmode(GPIO.BOARD)
-    #GPIO.setwarnings(False)
-    #GPIO.setup(button, GPIO.IN)
-    #buttonState = GPIO.input(button)
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setwarnings(False)
+    GPIO.setup(button, GPIO.IN)
+    buttonState = GPIO.input(button)
     while True:
 	time.sleep(5)
-	if buttonState != 12 #GPIO.input(button):
+	if buttonState != GPIO.input(button):
 	    break	
     camera.capture(img)
     camera.stop_preview()

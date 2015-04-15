@@ -676,7 +676,7 @@ def main():
 	rpSerial.sendX(ser, chr(init))
 	rpSerial.sendX(ser, chr(endX))
 	response = rpSerial.receiveX(ser, [chr(0x02), chr(0x06), chr(0x01), chr(0x03)])
-	if response 
+	
 	time.sleep(0.001)
 
     # Get image from file or camera =>MOVE IN WITHIN IMAGING FUNCTIONS

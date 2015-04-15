@@ -142,6 +142,20 @@ pin setup on PI
 
 
 '''
+
+init	= 0x01
+startX 	= 0x02
+endX 	= 0x03
+acknow 	= 0x06
+burn 	= 0x0B
+endIm	= 0x0F
+startIm	= 0x11
+esc 	= 0x1B
+error	= 0x3f
+readyB 	= 0x4d
+emerg	= 0x0d
+
+
 # this is used to make sure the threads stay active as long as 
 #   there is still data to transmit
 Qdone = False
@@ -254,11 +268,14 @@ def runImageSide(mode, q, pq, ser):
 	myImg = takePic()
 	# Start Image command
 	response = 2
-	ser.write(str(0x021103))
+	rpSerial.sendX(ser, chr(startX))
+	rpSerial.sendX(ser, chr(startIm))
+	rpSerial.sendX(ser, chr(endX))
 	while response > 0:
+	    rpSerial.sendX(ser, chr(startX))
+	    rpSerial.sendX(ser, chr(startIm))
+	    rpSerial.sendX(ser, chr(endX))
 	    response = rpSerial.receiveX(ser, [0x02, 0x06, 0x11, 0x03])
-	    if response == 1:
-		ser.write(str(0x021103))
 	# Process Image and populate in serial Q
 	if (mode == 1):
 	    myA = edgeDetectImage(myImg, size)
@@ -274,12 +291,12 @@ def runImageSide(mode, q, pq, ser):
 	    time.sleep(1)
 	time.sleep(3)
 	# Send end of image command
-	ser.write(str(0x020f03))
 	response = 2
 	while response > 0:
+	    rpSerial.sendX(ser, chr(startX))
+	    rpSerial.sendX(ser, chr(endIm))
+	    rpSerial.sendX(ser, chr(endX))
 	    response = rpSerial.receiveX(ser, [0x02, 0x06, 0x0F, 0x03])
-	    if response == 1:
-		ser.write(str(0x020F03))
     return
 
 def getLevel(pixel, levels):
@@ -653,13 +670,12 @@ def main():
     
     response = 2
     time.sleep(1)
-    ser.write(str(0x020103))
     print "waiting for Garin"
     while response > 0:
-	response = rpSerial.receiveX(ser, [0x02, 0x01, 0x03])
-	if response == 1:
-	    ser.write(str(0x020103))
-    ser.write(str(0x02060103))
+	rpSerial.sendX(ser, chr(startX))
+	rpSerial.sendX(ser, chr(init))
+	rpSerial.sendX(ser, chr(endX))
+	response = rpSerial.receiveX(ser, [0x02, 0x06 0x01, 0x03])
 
     # Get image from file or camera =>MOVE IN WITHIN IMAGING FUNCTIONS
     #myImg = takePic()

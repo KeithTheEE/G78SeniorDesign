@@ -8,7 +8,7 @@ import Queue
 import serial
 import sys
 import rpSerial
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 import glob
 import picamera
 from time import sleep

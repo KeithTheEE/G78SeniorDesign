@@ -650,7 +650,7 @@ def main():
     # Now we wait until the micro is initalized:
     # this
     # THIS IS ONLY COMMENTED TO TEST, FIX FOR FULL COMM SUPPORT
-    '''
+    
     response = 2
     time.sleep(1)
     ser.write(str(0x020103))
@@ -663,7 +663,7 @@ def main():
 
     # Get image from file or camera =>MOVE IN WITHIN IMAGING FUNCTIONS
     #myImg = takePic()
-    '''
+    
 
 
     # Start all threads: Printing thread, Serail com thread, and Edge or Raster Thread
@@ -729,12 +729,13 @@ def takePic():
     camera = picamera.PiCamera()
     camera.start_preview()
     button = 12
-    GPIO.setmode(GPIO.BOARD)
-    GPIO.setwarnings(False)
-    GPIO.setup(button, GPIO.IN)
-    buttonState = GPIO.input(button)
+    #GPIO.setmode(GPIO.BOARD)
+    #GPIO.setwarnings(False)
+    #GPIO.setup(button, GPIO.IN)
+    #buttonState = GPIO.input(button)
     while True:
-	if buttonState != GPIO.input(button):
+	time.sleep(5)
+	if buttonState != 12 #GPIO.input(button):
 	    break	
     camera.capture(img)
     camera.stop_preview()

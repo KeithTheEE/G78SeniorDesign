@@ -675,7 +675,7 @@ def main():
 	rpSerial.sendX(ser, chr(startX))
 	rpSerial.sendX(ser, chr(init))
 	rpSerial.sendX(ser, chr(endX))
-	response = rpSerial.receiveX(ser, [0x02, 0x06 0x01, 0x03])
+	response = rpSerial.receiveX(ser, [0x02, 0x06, 0x01, 0x03])
 
     # Get image from file or camera =>MOVE IN WITHIN IMAGING FUNCTIONS
     #myImg = takePic()

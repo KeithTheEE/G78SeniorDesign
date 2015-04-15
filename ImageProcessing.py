@@ -650,7 +650,7 @@ def main():
 
     # Runtime Settings:
     #   Set Size and basics
-    size = 100 # pixels
+    size = 10 # pixels
     #thresholdLevels = [75, 110, 180, 225]
     #myImg = "template.png"
     mode = raster

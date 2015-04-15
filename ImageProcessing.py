@@ -296,11 +296,12 @@ def runImageSide(mode, q, pq, ser, size):
 	    myA = rasterImage(myImg, size)
 	    thresholdLevs = getThresh(myA)
 	    threadPop = rasterQ(myA, q, thresholdLevels, pq)
-   	time.sleep(05)
+	    print "THREAD POP"
+   	time.sleep(.05)
 	# Wait for all of the image to be done being processed
 	while q.qsize() > 0:
 	    time.sleep(1)
-	print "HEYEYEYEYYEEY"
+	    print "HEYEYEYEYYEEY", q.qsize()
 	time.sleep(3)
 	# Send end of image command
 	response = 2
@@ -413,8 +414,6 @@ def rasterQ(imagA, q, levels, printq):
     printq.put(msg)
     Qdone = True
     while not q.empty():
-	time.sleep(1)
-    while not Sdone:
 	time.sleep(1)
 
     return

@@ -54,12 +54,12 @@ startX 	= 0x02
 endX 	= 0x03
 acknow 	= 0x06
 burn 	= 0x0B
+emerg	= 0x0d
 endIm	= 0x0F
 startIm	= 0x11
 esc 	= 0x1B
 error	= 0x3f
 readyB 	= 0x4d
-emerg	= 0x0d
 
 startXc 	= "0x02"
 endXc 		= "0x03"
@@ -396,7 +396,7 @@ def logicFlow2(ser, payload):
     while p2 == 1:
 	# Phase 1 0x02PAYCHECK03 Pi->MSP
         sendPix(ser, payload)
-	# Phase 2 0x02060b03 MSP<-Pi
+	# Phase 2 0x02060b03 MSP->Pi
 	p2 = phase2(ser)
         startTime = time.time()
 	if ((time.time() - startTime) > maxWait):
@@ -439,7 +439,7 @@ def rpSerialManager(q, ser):
 
     #ser.write("HEN")
     while (i < 5):
-        time.sleep(2)
+        time.sleep(0.1)
 	i += 1
 	while not q.empty():
 	    payload = q.get()

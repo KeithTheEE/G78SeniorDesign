@@ -300,6 +300,7 @@ def runImageSide(mode, q, pq, ser, size):
 	# Wait for all of the image to be done being processed
 	while not q.empty():
 	    time.sleep(1)
+	print "HEYEYEYEYYEEY"
 	time.sleep(3)
 	# Send end of image command
 	response = 2
@@ -445,6 +446,12 @@ def serialManager(q, ser, printq):
     printq.put(msg)
     pixCount = 0
     i = 0
+    while True:
+	if not q.empty():
+	    rpSerial.rpSerialManager(q, ser)
+	else:
+	    time.sleep(1)
+    '''
     while not Qdone:
 	check = rpSerial.rpSerialManager(q, ser)
 	if check == 1:
@@ -458,6 +465,7 @@ def serialManager(q, ser, printq):
 	check = rpSerial.rpSerialManager(q, ser)
     Sdone = True
     print "Sdone Ln 310", Sdone
+    '''
     return
 def checkerboard():
     # This function is for milestone 2 in semester 2

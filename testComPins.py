@@ -14,8 +14,11 @@ def main():
     GPIO.setup(rx, GPIO.OUT)
     GPIO.setup(tx, GPIO.OUT)
     while True: 
-	GPIO.output(rx, !GPIO.output(rx))
-	GPIO.output(tx, !GPIO.output(tx))
+	GPIO.output(rx, False)
+	GPIO.output(tx, False)
+	time.sleep(0.001)
+	GPIO.output(rx, True)
+	GPIO.output(tx, True)
 	time.sleep(0.001)
     return
 

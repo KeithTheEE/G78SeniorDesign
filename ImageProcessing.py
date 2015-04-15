@@ -652,7 +652,9 @@ def main():
     # THIS IS ONLY COMMENTED TO TEST, FIX FOR FULL COMM SUPPORT
     
     response = 2
+    time.sleep(1)
     ser.write(str(0x020103))
+    print "waiting for Garin"
     while response > 0:
 	response = rpSerial.receiveX(ser, [0x02, 0x01, 0x03])
 	if response == 1:

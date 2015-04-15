@@ -275,7 +275,7 @@ def runImageSide(mode, q, pq, ser):
 	    rpSerial.sendX(ser, chr(startX))
 	    rpSerial.sendX(ser, chr(startIm))
 	    rpSerial.sendX(ser, chr(endX))
-	    response = rpSerial.receiveX(ser, [0x02, 0x06, 0x11, 0x03])
+	    response = rpSerial.receiveX(ser, [chr(0x02), chr(0x06), chr(0x11), chr(0x03)])
 	# Process Image and populate in serial Q
 	if (mode == 1):
 	    myA = edgeDetectImage(myImg, size)
@@ -296,7 +296,7 @@ def runImageSide(mode, q, pq, ser):
 	    rpSerial.sendX(ser, chr(startX))
 	    rpSerial.sendX(ser, chr(endIm))
 	    rpSerial.sendX(ser, chr(endX))
-	    response = rpSerial.receiveX(ser, [0x02, 0x06, 0x0F, 0x03])
+	    response = rpSerial.receiveX(ser, [chr(0x02), chr(0x06), chr(0x0F), chr(0x03)])
     return
 
 def getLevel(pixel, levels):
@@ -675,7 +675,9 @@ def main():
 	rpSerial.sendX(ser, chr(startX))
 	rpSerial.sendX(ser, chr(init))
 	rpSerial.sendX(ser, chr(endX))
-	response = rpSerial.receiveX(ser, [0x02, 0x06, 0x01, 0x03])
+	response = rpSerial.receiveX(ser, [chr(0x02), chr(0x06), chr(0x01), chr(0x03)])
+	if response 
+	time.sleep(0.001)
 
     # Get image from file or camera =>MOVE IN WITHIN IMAGING FUNCTIONS
     #myImg = takePic()

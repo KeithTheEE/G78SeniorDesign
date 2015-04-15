@@ -452,7 +452,7 @@ def rpSerialManager(q, ser):
 	    print pixCount, q.qsize(), q.empty()
 	    i = 0
     print "*******************************"
-    print "DONE ", pixCount," ", pixCount/1200
+    print "DONE :P ", pixCount," ", pixCount/1200
     # for testing mode
     #sys.exit('s')
     return 0

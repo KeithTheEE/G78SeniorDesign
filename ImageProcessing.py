@@ -445,12 +445,14 @@ def serialManager(q, ser, printq):
     msg = ("M", "Starting Serial")
     printq.put(msg)
     pixCount = 0
-    i = 0
+    i = 10
     while True:
 	if q.qsize() > 0:
-	    rpSerial.rpSerialManager(q, ser)
+	    print "CALLING SER MANAGER"
+	    i = rpSerial.rpSerialManager(q, ser)
 	else:
 	    time.sleep(1)
+	print i
     '''
     while not Qdone:
 	check = rpSerial.rpSerialManager(q, ser)

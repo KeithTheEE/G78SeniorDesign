@@ -255,7 +255,7 @@ def runImageSide(mode, q, pq, ser):
 	# Start Image command
 	response = 2
 	ser.write(str(0x021103))
-	while resonse > 0:
+	while response > 0:
 	    response = rpSerial.receiveX(ser, [0x02, 0x06, 0x11, 0x03])
 	    if response == 1:
 		ser.write(str(0x021103))
@@ -275,7 +275,8 @@ def runImageSide(mode, q, pq, ser):
 	time.sleep(3)
 	# Send end of image command
 	ser.write(str(0x020f03))
-	while resonse > 0:
+	response = 2
+	while response > 0:
 	    response = rpSerial.receiveX(ser, [0x02, 0x06, 0x0F, 0x03])
 	    if response == 1:
 		ser.write(str(0x020F03))
@@ -652,7 +653,7 @@ def main():
     
     response = 2
     ser.write(str(0x020103))
-    while resonse > 0:
+    while response > 0:
 	response = rpSerial.receiveX(ser, [0x02, 0x01, 0x03])
 	if response == 1:
 	    ser.write(str(0x020103))

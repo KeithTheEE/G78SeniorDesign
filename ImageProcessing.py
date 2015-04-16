@@ -276,8 +276,8 @@ class printQueueThread(threading.Thread):
 def runImageSide(mode, q, pq, ser, size):
     while True:
 	# Take Picture
-	# myImg = takePic()
-	myImg = "tswift3.png"
+	myImg = takePic()
+	#myImg = "tswift3.png"
 	# Start Image command
 	response = 2
 	rpSerial.sendX(ser, chr(startX))

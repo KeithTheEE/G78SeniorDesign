@@ -38,7 +38,7 @@ extern uint32_t time_ms;
 
 
 int main(void)
-{
+C{
 	// ------------------------------
 	// Variable Declaration
 	int32_t i, j;
@@ -69,6 +69,9 @@ int main(void)
 	initMotorIO();
 
 	// homeLaser();
+	enable_laser();
+	delay_ms( 8000 );
+	disable_laser();
 	// ------------------------------
 	
 	
@@ -235,13 +238,13 @@ int main(void)
 	
 	// ------------------------------
 	// Test Motor Drivers
-	while(1)
+	/*while(1)
 	{
-       moveMotors(6,6);
+       moveMotors(1,1);
        delay_ms( 10 );
        moveMotors(0,0);
        delay_ms( 10 );
-	}
+	}*/
 	// ------------------------------
 
 	
@@ -251,13 +254,13 @@ int main(void)
 	/*enable_laser();
 	delay_ms( 10000 );
 
-	for( j = 1; j < 11; j++ )
+	for( j = 0; j < 10; j++ )
 	{
-		for( i = 1; i < 51; i++ )
+		for( i = 0; i < 50; i++ )
 		{
-			moveMotors( i,2*j-1 );
+			moveMotors( i,2*j );
 
-			turn_on_laser_timed( 123 * 2 * (i), 10 * (j+1) );
+			turn_on_laser_timed( 123 * 2 * (1+i), 10 * (j+1) );
 
 
 			// if( i < 10 )
@@ -278,16 +281,16 @@ int main(void)
 			// }
 
 			// Simulate communication time
-			delay_ms( 1 );
+			delay_ms( 10 );
 		}
 
-		for( i = 50; i > 0; i-- )
+		for( i = 49; i >= 0; i-- )
 		{
-			moveMotors(i,2*j);
+			moveMotors(i,2*j + 1);
 
-			turn_on_laser_timed( 123 * 2 * (i), 10 * (j) );
+			turn_on_laser_timed( 123 * 2 * (1+i), 10 * (j+1) );
 
-			delay_ms( 1 );
+			delay_ms( 10 );
 		}
 	}
 

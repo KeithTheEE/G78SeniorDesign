@@ -325,7 +325,12 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 		repeat_it = xDiff / ( 2 * ACCEL_SIZE );
 		num_accel_it = ACCEL_SIZE * repeat_it;
 	}
-	else if( xDiff < ACCEL_SIZE )
+	else
+	{
+		accel_it = 3;
+		num_accel_it = 1;
+	}
+	/*else if( xDiff < ACCEL_SIZE )
 	{
 		it_skip = ACCEL_SIZE / ( xDiff / 2 );
 		accel_it = ACCEL_SIZE - 1 - ( it_skip * ( xDiff / 2 - 1 ) );
@@ -335,7 +340,7 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 	{
 		accel_it = ACCEL_SIZE - ( xDiff / 2 );
 		num_accel_it = ACCEL_SIZE - accel_it;
-	}
+	}*/
 
 	// Why did I think this was needed?
 	//num_accel_it /= it_skip;
@@ -427,26 +432,31 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 	else
 	{
 		P4OUT &= ~BIT0;  //positive direction
-		yDiff = ( Ynew - Y ) * TCK2PXL;
+		yDiff = ( Y - Ynew ) * TCK2PXL;
 	}
 
 
-	if( xDiff > ( 2 * ACCEL_SIZE ) )
+	if( yDiff > ( 2 * ACCEL_SIZE ) )
 	{
-		repeat_it = xDiff / ( 2 * ACCEL_SIZE );
+		repeat_it = yDiff / ( 2 * ACCEL_SIZE );
 		num_accel_it = ACCEL_SIZE * repeat_it;
 	}
-	else if( xDiff < ACCEL_SIZE )
+	else
 	{
-		it_skip = ACCEL_SIZE / ( xDiff / 2 );
-		accel_it = ACCEL_SIZE - 1 - ( it_skip * ( xDiff / 2 - 1 ) );
-		num_accel_it = xDiff / 2;
+		accel_it = 3;
+		num_accel_it = 1;
 	}
-	else if( xDiff < ( 2 * ACCEL_SIZE ) )
+	/*else if( yDiff < ACCEL_SIZE )
 	{
-		accel_it = ACCEL_SIZE - ( xDiff / 2 );
+		it_skip = ACCEL_SIZE / ( yDiff / 2 );
+		accel_it = ACCEL_SIZE - 1 - ( it_skip * ( yDiff / 2 - 1 ) );
+		num_accel_it = yDiff / 2;
+	}
+	else if( yDiff < ( 2 * ACCEL_SIZE ) )
+	{
+		accel_it = ACCEL_SIZE - ( yDiff / 2 );
 		num_accel_it = ACCEL_SIZE - accel_it;
-	}
+	}*/
 
 
 

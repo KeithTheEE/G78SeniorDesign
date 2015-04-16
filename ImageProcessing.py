@@ -276,7 +276,8 @@ class printQueueThread(threading.Thread):
 def runImageSide(mode, q, pq, ser, size):
     while True:
 	# Take Picture
-	myImg = takePic()
+	# myImg = takePic()
+	myImg = "tswift3.png"
 	# Start Image command
 	response = 2
 	rpSerial.sendX(ser, chr(startX))
@@ -297,12 +298,12 @@ def runImageSide(mode, q, pq, ser, size):
 	    thresholdLevs = getThresh(myA)
 	    threadPop = rasterQ(myA, q, thresholdLevels, pq)
 	    print "THREAD POP"
-   	time.sleep(.05)
+   	#time.sleep(.05)
 	# Wait for all of the image to be done being processed
 	while q.qsize() > 0:
 	    time.sleep(1)
-	    print "HEYEYEYEYYEEY", q.qsize()
-	time.sleep(3)
+	    #print "HEYEYEYEYYEEY", q.qsize()
+	time.sleep(1)
 	# Send end of image command
 	response = 2
 	while response > 0:
@@ -659,7 +660,7 @@ def main():
 
     # Runtime Settings:
     #   Set Size and basics
-    size = 10 # pixels
+    size = 100 # pixels
     #thresholdLevels = [75, 110, 180, 225]
     #myImg = "template.png"
     mode = raster

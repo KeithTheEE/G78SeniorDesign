@@ -194,7 +194,7 @@ void initMotorIO(void)
 uint8_t moveMotors( unsigned int Xnew, unsigned int Ynew ){
 	volatile uint32_t temp3 = TCK_DELAY;
 	/////////////enable drivers//////////////////////////
-	P6OUT |= BIT0;  //unreset drivers LAUNCHPAD
+	P6OUT |= BIT0;   //unreset drivers LAUNCHPAD
 	P6OUT &= ~BIT1;  //enable drivers LAUNCHPAD
 
 
@@ -298,6 +298,7 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 	uint16_t yDiff;
 	uint16_t i = 0;
 	uint16_t it_skip = 1;
+	uint16_t repeat_it = 1;
 	uint16_t accel_it = 0;
 	uint16_t num_accel_it = ACCEL_SIZE;
 
@@ -318,10 +319,17 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 		xDiff = ( X - Xnew ) * TCK2PXL;
 	}
 
-	if( xDiff < ACCEL_SIZE )
+
+	if( xDiff > ( 2 * ACCEL_SIZE ) )
+	{
+		repeat_it = xDiff / ( 2 * ACCEL_SIZE );
+		num_accel_it = ACCEL_SIZE * repeat_it;
+	}
+	else if( xDiff < ACCEL_SIZE )
 	{
 		it_skip = ACCEL_SIZE / ( xDiff / 2 );
 		accel_it = ACCEL_SIZE - 1 - ( it_skip * ( xDiff / 2 - 1 ) );
+		num_accel_it = xDiff / 2;
 	}
 	else if( xDiff < ( 2 * ACCEL_SIZE ) )
 	{
@@ -329,7 +337,8 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 		num_accel_it = ACCEL_SIZE - accel_it;
 	}
 
-	num_accel_it /= it_skip;
+	// Why did I think this was needed?
+	//num_accel_it /= it_skip;
 
 
 	/////////////////////////////////////////////////////////
@@ -385,19 +394,31 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 			X -= PXL2TCK;
 		}
 
-		if( i < ( num_accel_it - 1 ) )
+		if( ( i % repeat_it ) == ( repeat_it - 1 ) )
 		{
-			accel_it += it_skip;
-		}
-		else if( i > ( xDiff - num_accel_it - 1 ) )
-		{
-			accel_it -= it_skip;
+			if( i < ( num_accel_it - 1 ) )
+			{
+				accel_it += it_skip;
+			}
+			else if( i > ( xDiff - num_accel_it - 1 ) )
+			{
+				accel_it -= it_skip;
+			}
 		}
 	}
+
+	X = Xnew;
 	/////////////////////////////////////////////////////////
 
 
 	////////////////Set Y Direction//////////////////////////
+	it_skip = 1;
+	repeat_it = 1;
+	accel_it = 0;
+	num_accel_it = ACCEL_SIZE;
+
+
+
 	if(Y<Ynew)
 	{
 		P4OUT |= BIT0;  //positive direction
@@ -407,6 +428,24 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 	{
 		P4OUT &= ~BIT0;  //positive direction
 		yDiff = ( Ynew - Y ) * TCK2PXL;
+	}
+
+
+	if( xDiff > ( 2 * ACCEL_SIZE ) )
+	{
+		repeat_it = xDiff / ( 2 * ACCEL_SIZE );
+		num_accel_it = ACCEL_SIZE * repeat_it;
+	}
+	else if( xDiff < ACCEL_SIZE )
+	{
+		it_skip = ACCEL_SIZE / ( xDiff / 2 );
+		accel_it = ACCEL_SIZE - 1 - ( it_skip * ( xDiff / 2 - 1 ) );
+		num_accel_it = xDiff / 2;
+	}
+	else if( xDiff < ( 2 * ACCEL_SIZE ) )
+	{
+		accel_it = ACCEL_SIZE - ( xDiff / 2 );
+		num_accel_it = ACCEL_SIZE - accel_it;
 	}
 
 
@@ -441,7 +480,7 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 		Y = ticksY; //move to end of while
 	}*/
 
-	for( i = 0; i < yDiff; i++ )
+	/*for( i = 0; i < yDiff; i++ )
 	{
 		P3OUT |= BIT6;  //set step pin
 
@@ -460,7 +499,44 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 		{
 			Y -= PXL2TCK;
 		}
+	}*/
+
+
+	for( i = 0; i < yDiff; i++ )
+	{
+		volatile uint16_t temp5 = accel_delay[accel_it];
+		P3OUT |= BIT6;  //set step pin
+
+		delay_10us( accel_delay[accel_it] );
+
+		P3OUT &= ~BIT6;
+
+		delay_10us( accel_delay[accel_it] );
+
+
+		if(Y<Ynew)
+		{
+			Y += PXL2TCK;
+		}
+		else
+		{
+			Y -= PXL2TCK;
+		}
+
+		if( ( i % repeat_it ) == ( repeat_it - 1 ) )
+		{
+			if( i < ( num_accel_it - 1 ) )
+			{
+				accel_it += it_skip;
+			}
+			else if( i > ( yDiff - num_accel_it - 1 ) )
+			{
+				accel_it -= it_skip;
+			}
+		}
 	}
+
+	Y = Ynew;
 	/////////////////////////////////////////////////////////
 
 

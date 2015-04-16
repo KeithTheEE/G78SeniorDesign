@@ -149,13 +149,13 @@ void respond_to_burn_cmd( uint8_t * burn_cmd_payload )
 							&x_pos,
 							&laser_intensity );
 
-	if( buffer_it < 750  )
+	/*if( buffer_it < 750  )
 	{
-		//intensity_buffer[buffer_it] = laser_intensity;
-		//x_pos_buffer[buffer_it] = x_pos;
+		intensity_buffer[buffer_it] = laser_intensity;
+		x_pos_buffer[buffer_it] = x_pos;
 		y_pos_buffer[buffer_it] = y_pos;
 		buffer_it++;
-	}
+	}*/
 	//buffer_it++;
 	
 
@@ -168,11 +168,11 @@ void respond_to_burn_cmd( uint8_t * burn_cmd_payload )
 	
 	//uint8_t laser_intensity = ( burn_cmd_payload[0] & LASER_INTENSITY_MASK ) >> LASER_INTENSITY_SHIFT;
 
-	// delay_ms( 300 );
+	delay_ms( 50 );
 
 	switch( laser_intensity )
 	{
-		case 0:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_1 );
+		/*case 0:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_1 );
 				 break;
 
 		case 1:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_2 );
@@ -182,7 +182,7 @@ void respond_to_burn_cmd( uint8_t * burn_cmd_payload )
 				 break;
 
 		case 3:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_4 );
-				 break;
+				 break;*/
 
 		/*case 0:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_4 );
 			  	 break;

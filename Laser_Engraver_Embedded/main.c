@@ -59,7 +59,7 @@ int main(void)
 	#else
 		init_pcb_input();
 		init_pcb_LED();
-		//P3OUT |= PCB_LED;	// Turn on the debug LED
+		P3OUT |= PCB_LED;	// Turn on the debug LED
 	#endif
 
 	init_clocks();
@@ -69,7 +69,6 @@ int main(void)
 	initMotorIO();
 
 	// homeLaser();
-	//while(1);
 	// ------------------------------
 	
 	
@@ -236,20 +235,20 @@ int main(void)
 	
 	// ------------------------------
 	// Test Motor Drivers
-	/*while(1)
+	while(1)
 	{
-       moveMotors(100,0);
+       moveMotors(6,6);
        delay_ms( 10 );
        moveMotors(0,0);
        delay_ms( 10 );
-	}*/
+	}
 	// ------------------------------
 
 	
 	
 	// ------------------------------
 	// Test picture values/spacing
-	enable_laser();
+	/*enable_laser();
 	delay_ms( 10000 );
 
 	for( j = 1; j < 11; j++ )
@@ -292,7 +291,7 @@ int main(void)
 		}
 	}
 
-	disable_laser();
+	disable_laser();*/
 	// ------------------------------
 	
 
@@ -397,7 +396,7 @@ int main(void)
 			if( pi_init == JUST_INITIALIZED )
 			{
 				// Indicate to the Pi that everything has been initialized
-				send_MSP_initialized();
+				//send_MSP_initialized();
 
 				pi_init = TRUE;	// Pi is initialized, and ping has been sent
 			}

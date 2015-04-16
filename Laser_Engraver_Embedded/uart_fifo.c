@@ -30,7 +30,7 @@ volatile uint8_t tx_char;			//This char is the most current char to go into the 
 volatile uint8_t rx_flag;			//Mailbox Flag for the rx_char.
 volatile uint8_t rx_char;			//This char is the most current char to come out of the UART
 
-volatile uint8_t tx_fifo[FIFO_SIZE];	//The array for the tx fifo
+volatile uint8_t tx_fifo[FIFO_SIZE];  //The array for the tx fifo
 volatile uint8_t rx_fifo[FIFO_SIZE];  //The array for the rx fifo
 
 volatile uint16_t tx_fifo_ptA;			//Theses pointers keep track where the UART and the Main program are in the Fifos
@@ -44,9 +44,9 @@ volatile uint8_t tx_fifo_full;
 volatile uint8_t packet_ip;
 volatile uint8_t packet_ready;
 
-extern volatile uint8_t burn_ready = FALSE;
-extern volatile uint8_t picture_ip = FALSE;
-extern volatile uint8_t pi_init    = FALSE;
+volatile uint8_t burn_ready = FALSE;
+volatile uint8_t picture_ip = FALSE;
+volatile uint8_t pi_init    = FALSE;
 
 extern volatile uint32_t time_ms;
 
@@ -204,7 +204,7 @@ uint16_t uart_getp( uint8_t* packet, uint16_t max_length )
 
 			if( esc_count % 2 == 0 )
 			{
-				return i;
+				return i+1;
 			}
 		}
 	}
@@ -426,9 +426,11 @@ uint16_t parse_rx_packet( uint8_t *rx_buff, uint16_t length, struct TPacket_Data
 		rx_it++; // the ith element is now the ETX field of the rx_buff
 	}
 
+	volatile uint32_t temp;
 	// Check if ETX was received and if packet was properly terminated
 	if(rx_buff[rx_it] != ETX )
 	{
+		temp = rx_buff[rx_it];
 		return 1;
 	}
 
@@ -593,49 +595,54 @@ void check_and_respond_to_msg( struct TPacket_Data * rx_data )
 		uint16_t rx_size = uart_getp( rx_packet, MAX_PACKET_LENGTH );
 		if( parse_rx_packet( rx_packet, rx_size, &lrx_data ) == 0 )
 		{
-			if( lrx_data.command == CMD_BURN )
+			// If not a new command, it the Pi is acknowledging a message -> Don't respond
+			if( lrx_data.ack == NEW_CMD )
 			{
-				send_ack( lrx_data.command, ACK_MSG );
-				burn_ready = TRUE;
-			}
-			else if( lrx_data.command == CMD_START )
-			{					 
-				send_ack( lrx_data.command, ACK_MSG );
-			    enable_laser();
-				picture_ip = TRUE;
-				burn_ready = FALSE;
-
-				// Since a burn pixel command should be imminent, start the timer for the timeout
-				pixel_request_time = time_ms;
-
-				//homeLaser();
-			}
-			else if( lrx_data.command == CMD_END )
-			{
-				send_ack( lrx_data.command, ACK_MSG );
-				disable_laser();
-				picture_ip = FALSE;
-
-				//homeLaser();
-			}
-			else if( lrx_data.command == CMD_INIT )
-			{
-				if( pi_init == TRUE );
+				if( lrx_data.command == CMD_BURN )
 				{
-					disable_laser();
-					//homeLaser();
-
-					// Don't send here (for fear of small chance of infinite recursion)
-					//   Instead, do this in main loop (if 'pi_init == JUST_INITIALIZED')
-					// send_MSP_initialized();
+					send_ack( lrx_data.command, ACK_MSG );
+					burn_ready = TRUE;
 				}
+				else if( lrx_data.command == CMD_START )
+				{					 
+					send_ack( lrx_data.command, ACK_MSG );
+					enable_laser();
+					picture_ip = TRUE;
+					burn_ready = FALSE;
 
-				pi_init = JUST_INITIALIZED;
-			}
-			else
-			{
-				// Bad commands should be caught in the parsing function
-				send_ack( lrx_data.command, NAK_MSG );
+					// Since a burn pixel command should be imminent, start the timer for the timeout
+					pixel_request_time = time_ms;
+
+					//homeLaser();
+				}
+				else if( lrx_data.command == CMD_END )
+				{
+					send_ack( lrx_data.command, ACK_MSG );
+					disable_laser();
+					picture_ip = FALSE;
+
+					//homeLaser();
+				}
+				else if( lrx_data.command == CMD_INIT )
+				{
+					if( pi_init == TRUE );
+					{
+						disable_laser();
+						//homeLaser();
+
+						// Don't send here (for fear of small chance of infinite recursion)
+						//   Instead, do this in main loop (if 'pi_init == JUST_INITIALIZED')
+						// send_MSP_initialized();
+					}
+
+					send_ack( lrx_data.command, ACK_MSG );
+					pi_init = JUST_INITIALIZED;
+				}
+				else
+				{
+					// Bad commands should be caught in the parsing function
+					send_ack( lrx_data.command, NAK_MSG );
+				}
 			}
 		}
 		else

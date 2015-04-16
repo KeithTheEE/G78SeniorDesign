@@ -768,14 +768,14 @@ def takePic():
     camera = picamera.PiCamera()
     camera.start_preview()
     button = 12
-    GPIO.setmode(GPIO.BOARD)
-    GPIO.setwarnings(False)
-    GPIO.setup(button, GPIO.IN)
-    buttonState = GPIO.input(button)
-    while True:
-	time.sleep(5)
-	if buttonState != GPIO.input(button):
-	    break	
+    #GPIO.setmode(GPIO.BOARD)
+    #GPIO.setwarnings(False)
+    #GPIO.setup(button, GPIO.IN)
+    #buttonState = GPIO.input(button)
+    #while True:
+    #	if buttonState != GPIO.input(button):
+    #	    break
+    raw_input()
     camera.capture(img)
     camera.stop_preview()
     camera.close()

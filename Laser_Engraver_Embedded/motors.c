@@ -1,9 +1,9 @@
 //============================================================================
 // Project	   : Laser Engraver Embedded
 // Name        : motors.c
-// Author      : Fernando Urias-Cordero
-// Email       : furias.cordero@gmail.com
-// Date		   : 2015-01-26 (Created), 2015-04-01 (Last Updated)
+// Author      : Garin Newcomb and Fernando Urias-Cordero
+// Email       : gpnewcomb@live.com and furias.cordero@gmail.com
+// Date		   : 2015-01-26 (Created), 2015-04-16 (Last Updated)
 // Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
 // Description : Source code to drive the on-board DRV8825PWPR stepper motor
 //				 drivers
@@ -156,23 +156,10 @@ void initMotorIO(void)
 	// P2IE  |= BIT1;
 	///////////////////////////////////////////////////////////////
 
-	/////////////////////////// Sets up P2.2 as interrupt//////////////////
-	P2REN |= BIT2;  // pull up resistor
-	P2OUT |= BIT2;
-	P2IES |= BIT2;  // ISR triggered hi-lo transition
-	P2IFG &= ~BIT2; // P2.2 IFG cleared
-	// P2IE  |= BIT2;
-	///////////////////////////////////////////////////////////////
 
 	///////////////////////////Home Pin Inputs////////////////////////
-	#ifdef DEBUG
-		P4DIR &= ~BIT3; //P4.3 X home - make input
-		P2DIR &= ~BIT3; //P2.3 Y home - make input
-
-	#else
-		P4DIR &= ~BIT3; //P4.3 X home - make input
-		P2DIR &= ~BIT3; //P2.3 Y home - make input
-	#endif
+	P4DIR &= ~BIT3; //P4.3 X home - make input
+	P2DIR &= ~BIT3; //P2.3 Y home - make input
 	/////////////////////////////////////////////////////////////////////
 
 
@@ -354,36 +341,6 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 
 	/////////////////////////////////////////////////////////
 
-
-	/*while( ( X - Xnew ) > .001 || ( X - Xnew ) < -.001 ){
-		if(X<Xnew){
-
-			P7OUT |= BIT5;  //set step pin
-
-			delay_10us( TCK_DELAY );
-
-			P7OUT &= ~BIT5;
-
-			delay_10us( TCK_DELAY );
-
-			ticksX += PXL2TCK;
-		}
-		else if(X>Xnew){
-
-			//  P7OUT &= ~BIT7; //negative direction
-			P7OUT |= BIT5;  //set step pin
-
-			delay_10us( TCK_DELAY );
-
-			P7OUT &= ~BIT5;
-
-			delay_10us( TCK_DELAY );
-			ticksX -= PXL2TCK;
-		}
-
-		X = ticksX; //move to end of while
-	}*/
-
 	for( i = 0; i < xDiff; i++ )
 	{
 		volatile uint16_t temp4 = accel_delay[accel_it];
@@ -429,7 +386,6 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 	num_accel_it = ACCEL_SIZE;
 
 
-
 	if(Y<Ynew)
 	{
 		P4OUT &= ~BIT0;  //positive direction
@@ -465,67 +421,14 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 	}*/
 
 
-
-	/*while( ( Y - Ynew ) > .001 || ( Y - Ynew ) < -.001 ){
-
-		if(Y<Ynew){
-
-			// P4OUT |= BIT0;  //positive direction
-			P3OUT |= BIT6;  //set step pin
-
-			delay_10us( TCK_DELAY );
-
-			P3OUT &= ~BIT6;
-
-			delay_10us( TCK_DELAY );
-			ticksY += PXL2TCK;
-		}
-		else if(Y>Ynew){
-
-			// P4OUT &= ~BIT0; // Negative direction
-			P3OUT |= BIT6;  // Set step pin
-
-			delay_10us( TCK_DELAY );
-
-			P3OUT &= ~BIT6;
-
-			delay_10us( TCK_DELAY );
-			ticksY -= PXL2TCK;
-		}
-
-		Y = ticksY; //move to end of while
-	}*/
-
-	/*for( i = 0; i < yDiff; i++ )
-	{
-		P3OUT |= BIT6;  //set step pin
-
-		delay_10us( accel_delay[accel_it] );
-
-		P3OUT &= ~BIT6;
-
-		delay_10us( accel_delay[accel_it] );
-
-
-		if(Y<Ynew)
-		{
-			Y += PXL2TCK;
-		}
-		else
-		{
-			Y -= PXL2TCK;
-		}
-	}*/
-
-
 	for( i = 0; i < yDiff; i++ )
 	{
 		volatile uint16_t temp5 = accel_delay[accel_it];
-		P3OUT |= BIT6;  //set step pin
+		P3OUT |= BIT6;  // Set step pin
 
 		delay_10us( accel_delay[accel_it] );
 
-		P3OUT &= ~BIT6;
+		P3OUT &= ~BIT6; // Reset step pin
 
 		delay_10us( accel_delay[accel_it] );
 
@@ -655,6 +558,7 @@ void homeLaser(void){
 	P7OUT |= BIT7;  //negative X direction
     P4OUT |= BIT0;  //negative Y direction
 
+    // Enable interrupts
     P2IE |= BIT0;
     P2IE |= BIT1;
 	/////////////////////////////////////////////////
@@ -677,7 +581,7 @@ void homeLaser(void){
 			{
 				// Interrupt was false - wait for another
 				debounce_xhome = FALSE;
-				P2IE  |= BIT0;
+				P2IE |= BIT0;
 			}
 		}
 		else
@@ -774,7 +678,7 @@ __interrupt void Port_2(void)
 
 #else
 #pragma vector=PORT2_VECTOR
-__interrupt void Port_2(void)
+__interrupt void PORT_2_ISR(void)
 {
 	volatile uint16_t fuck_all_the_things = P2IV;
 
@@ -787,7 +691,9 @@ __interrupt void Port_2(void)
 
 		debounce_xhome = TRUE;
 
-		P3OUT |= PCB_LED;	// Turn on the debug LED
+		P3OUT &= ~PCB_LED;	// Turn on the debug LED
+
+		P2IFG &= ~BIT0; // P2.2 IFG cleared
 	}
 	if( fuck_all_the_things & P2IV_P2IFG1 ){   //YHOME P2.1 interrupt
 
@@ -797,21 +703,10 @@ __interrupt void Port_2(void)
 
 		debounce_yhome = TRUE;
 
-		P3OUT &= ~PCB_LED;	// Turn on the debug LED
+		P3OUT |= PCB_LED;	// Turn on the debug LED
+
+		P2IFG &= ~BIT1; // P2.2 IFG cleared
 	}
-	if( fuck_all_the_things & P2IV_P2IFG2 ){   // Lid P2.2 interrupt
-		lid = 0;
-
-		debounce_lid = TRUE;
-
-		// need to shut down laser here
-		if( picture_ip == TRUE )
-		{
-			halt_burn();
-		}
-	}
-
-	P2IFG &= ~BIT2; // P2.2 IFG cleared
 }
 #endif
 

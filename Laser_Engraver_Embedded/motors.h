@@ -1,9 +1,9 @@
 //============================================================================
 // Project	   : Laser Engraver Embedded
 // Name        : motors.h
-// Author      : Fernando Urias-Cordero
-// Email       : furias.cordero@gmail.com
-// Date		   : 2015-01-26 (Created), 2015-03-09 (Last Updated)
+// Author      : Garin Newcomb and Fernando Urias-Cordero
+// Email       : gpnewcomb@live.com and furias.cordero@gmail.com
+// Date		   : 2015-01-26 (Created), 2015-04-16 (Last Updated)
 // Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
 // Description : Header file including function prototypes used in driving
 //				 the laser driver's analog input

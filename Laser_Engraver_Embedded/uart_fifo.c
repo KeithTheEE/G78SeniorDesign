@@ -3,7 +3,7 @@
 // Name        : uart_fifo.c
 // Author      : Garin Newcomb, Tyler Troyer, and Chris Haggart
 // Email       : gpnewcomb@live.com, troyerta@gmail.com, and chaggart5@gmail.com
-// Date		   : 2014-10-11 (Created), 2015-03-18 (Last Updated)
+// Date		   : 2014-10-11 (Created), 2015-04-16 (Last Updated)
 // Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
 // Description : Source code for uart communication
 //============================================================================
@@ -49,9 +49,11 @@ volatile uint8_t picture_ip = FALSE;
 volatile uint8_t pi_init    = FALSE;
 
 extern volatile uint32_t time_ms;
+extern volatile uint8_t door_opened;
 
 volatile uint32_t last_rx_time 	     = UINT32_MAX;
 volatile uint32_t pixel_request_time = UINT32_MAX;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -604,7 +606,15 @@ void check_and_respond_to_msg( struct TPacket_Data * rx_data )
 					burn_ready = TRUE;
 				}
 				else if( lrx_data.command == CMD_START )
-				{					 
+				{
+					if( door_opened == FALSE )
+					{
+						// If the door hasn't been opened yet, wait for it to open (then close)
+						while( P6IN & LID_OPEN );
+						door_opened = TRUE;
+						while( !( P6IN & LID_OPEN ) );
+					}
+
 					send_ack( lrx_data.command, ACK_MSG );
 					enable_laser();
 					picture_ip = TRUE;
@@ -622,6 +632,7 @@ void check_and_respond_to_msg( struct TPacket_Data * rx_data )
 					picture_ip = FALSE;
 
 					homeLaser();
+					door_opened = FALSE;
 				}
 				else if( lrx_data.command == CMD_INIT )
 				{

@@ -613,7 +613,7 @@ void check_and_respond_to_msg( struct TPacket_Data * rx_data )
 					// Since a burn pixel command should be imminent, start the timer for the timeout
 					pixel_request_time = time_ms;
 
-					//homeLaser();
+					homeLaser();
 				}
 				else if( lrx_data.command == CMD_END )
 				{
@@ -621,14 +621,14 @@ void check_and_respond_to_msg( struct TPacket_Data * rx_data )
 					disable_laser();
 					picture_ip = FALSE;
 
-					//homeLaser();
+					homeLaser();
 				}
 				else if( lrx_data.command == CMD_INIT )
 				{
 					if( pi_init == TRUE );
 					{
 						disable_laser();
-						//homeLaser();
+						homeLaser();
 
 						// Don't send here (for fear of small chance of infinite recursion)
 						//   Instead, do this in main loop (if 'pi_init == JUST_INITIALIZED')

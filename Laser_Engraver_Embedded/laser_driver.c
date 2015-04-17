@@ -64,6 +64,8 @@ void disable_laser( void )
 {
 	P1OUT |= LASER_ENA_PIN;		// Laser enabled
 
+	disable_fan();
+
 	return;
 }
 //============================================================================
@@ -73,6 +75,43 @@ void disable_laser( void )
 void enable_laser( void )
 {
 	P1OUT &= ~LASER_ENA_PIN;	// Laser disabled
+
+	enable_fan();
+
+	return;
+}
+//============================================================================
+
+
+
+void init_fan( void )
+{
+	disable_fan();
+
+	// Set Port 1.2 I/O to GPIO mode (laser enable pin)
+	P7OUT |=  FAN_ENA_PIN;	// Laser disabled
+	P7SEL &= ~FAN_ENA_PIN;	// Select I/O
+	P7DIR &= ~FAN_ENA_PIN;	// Select output
+
+	return;
+}
+//============================================================================
+
+
+
+void enable_fan( void )
+{
+	P7OUT |= FAN_ENA_PIN;	// Fan enabled
+
+	return;
+}
+//============================================================================
+
+
+
+void disable_fan( void )
+{
+	P7OUT &= ~FAN_ENA_PIN;	// Fan disabled
 
 	return;
 }
@@ -168,33 +207,21 @@ void respond_to_burn_cmd( uint8_t * burn_cmd_payload )
 	
 	//uint8_t laser_intensity = ( burn_cmd_payload[0] & LASER_INTENSITY_MASK ) >> LASER_INTENSITY_SHIFT;
 
-	delay_ms( 50 );
+	//delay_ms( 50 );
 
 	switch( laser_intensity )
 	{
-		/*case 0:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_1 );
+		case 0:  turn_on_laser_timed( INTENSITY_1, LASER_DUR_1 );
 				 break;
 
-		case 1:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_2 );
+		case 1:  turn_on_laser_timed( INTENSITY_2, LASER_DUR_2 );
 				 break;
 
-		case 2:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_3 );
+		case 2:  turn_on_laser_timed( INTENSITY_3, LASER_DUR_3 );
 				 break;
 
 		case 3:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_4 );
-				 break;*/
-
-		/*case 0:  turn_on_laser_timed( MAX_INTENSITY, LASER_DUR_4 );
-			  	 break;
-
-		case 1:  turn_on_laser_timed( INTENSITY_3, LASER_DUR_4 );
 				 break;
-
-		case 2:  turn_on_laser_timed( INTENSITY_2, LASER_DUR_4 );
-				 break;
-
-		case 3:  turn_on_laser_timed( INTENSITY_1, LASER_DUR_4 );
-				 break;*/
 
 		default: break;
 	}

@@ -34,10 +34,13 @@ extern volatile uint8_t picture_ip;
 extern volatile uint8_t pi_init;
 extern uint32_t time_ms;
 
+extern volatile uint8_t debounce_xhome;
+extern volatile uint8_t debounce_yhome;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
-int main(void)
+int main( void )
 {
 	// ------------------------------
 	// Variable Declaration
@@ -65,10 +68,26 @@ int main(void)
 	init_clocks();
 	initWaitTimer();
 	init_laser();
+	init_fan();
     init_uart();
 	initMotorIO();
 
-	// homeLaser();
+	homeLaser();
+	enable_laser();
+	delay_ms( 8000 );
+	disable_laser();
+
+	/*volatile uint8_t ccs_bullshit = 0;
+
+	while( debounce_yhome == FALSE )
+	{
+		delay_ms( 5 );
+		if( !( P2IN & BIT1 ) )
+		{
+			ccs_bullshit++;
+		}
+	}*/
+
 	// ------------------------------
 	
 	
@@ -235,13 +254,27 @@ int main(void)
 	
 	// ------------------------------
 	// Test Motor Drivers
-	while(1)
+	/*while(1)
 	{
-       moveMotors(6,6);
-       delay_ms( 10 );
-       moveMotors(0,0);
-       delay_ms( 10 );
-	}
+		moveMotors(100,100);
+		delay_ms( 10 );
+		moveMotors(0,0);
+		delay_ms( 10 );
+
+
+
+		//for( i = 0; i < 100; i++ )
+		//{
+		//	moveMotors(i,0);
+		//}
+
+		//delay_ms( 10 );
+		//for( i = 0; i < 100; i++ )
+		//{
+		//	moveMotors(99-i,0);
+		//}
+		//delay_ms( 10 );
+	}*/
 	// ------------------------------
 
 	
@@ -251,13 +284,13 @@ int main(void)
 	/*enable_laser();
 	delay_ms( 10000 );
 
-	for( j = 1; j < 11; j++ )
+	for( j = 0; j < 10; j++ )
 	{
-		for( i = 1; i < 51; i++ )
+		for( i = 0; i < 50; i++ )
 		{
-			moveMotors( i,2*j-1 );
+			moveMotors( i,2*j );
 
-			turn_on_laser_timed( 123 * 2 * (i), 10 * (j+1) );
+			turn_on_laser_timed( 123 * 2 * (1+i), 10 * (j+1) );
 
 
 			// if( i < 10 )
@@ -278,16 +311,16 @@ int main(void)
 			// }
 
 			// Simulate communication time
-			delay_ms( 1 );
+			delay_ms( 10 );
 		}
 
-		for( i = 50; i > 0; i-- )
+		for( i = 49; i >= 0; i-- )
 		{
-			moveMotors(i,2*j);
+			moveMotors(i,2*j + 1);
 
-			turn_on_laser_timed( 123 * 2 * (i), 10 * (j) );
+			turn_on_laser_timed( 123 * 2 * (1+i), 10 * (j+1) );
 
-			delay_ms( 1 );
+			delay_ms( 10 );
 		}
 	}
 

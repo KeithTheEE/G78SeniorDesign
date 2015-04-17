@@ -33,6 +33,10 @@ volatile int homeY = 1; 		//flag for homing y
 volatile int lid = 1; 			//flag for lid
 volatile int skipStep = 1; 		//flag for homing y
 
+volatile uint8_t debounce_lid   = FALSE;
+volatile uint8_t debounce_xhome = FALSE;
+volatile uint8_t debounce_yhome = FALSE;
+
 uint32_t accel_delay[ACCEL_SIZE];
 
 extern volatile uint8_t picture_ip;
@@ -135,19 +139,21 @@ void initMotorIO(void)
 
 
 	/////////////////////////// Sets up P2.0 as interrupt//////////////////
+	P2DIR &= ~BIT0;
 	P2REN |= BIT0; //pull up resistor
 	P2OUT |= BIT0;
 	P2IES |= BIT0; // ISR triggered hi-lo transition
 	P2IFG &= ~BIT0; // P2.0 IFG cleared
-	P2IE  |= BIT0;
+	// P2IE  |= BIT0;
 	///////////////////////////////////////////////////////////////
 
 	/////////////////////////// Sets up P2.1 as interrupt//////////////////
+	P2DIR &= ~BIT1;
 	P2REN |= BIT1; //pull up resistor
 	P2OUT |= BIT1;
 	P2IES |= BIT1; // ISR triggered hi-lo transition
 	P2IFG &= ~BIT1; // P2.1 IFG cleared
-	P2IE  |= BIT1;
+	// P2IE  |= BIT1;
 	///////////////////////////////////////////////////////////////
 
 	/////////////////////////// Sets up P2.2 as interrupt//////////////////
@@ -155,7 +161,7 @@ void initMotorIO(void)
 	P2OUT |= BIT2;
 	P2IES |= BIT2;  // ISR triggered hi-lo transition
 	P2IFG &= ~BIT2; // P2.2 IFG cleared
-	P2IE  |= BIT2;
+	// P2IE  |= BIT2;
 	///////////////////////////////////////////////////////////////
 
 	///////////////////////////Home Pin Inputs////////////////////////
@@ -310,12 +316,12 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 	////////////////Set X Direction//////////////////////////
 	if(X<Xnew)
 	{
-		P7OUT |= BIT7;  //positive direction
+		P7OUT &= ~BIT7;  //negative direction
 		xDiff = ( Xnew - X ) * TCK2PXL;
 	}
 	else
 	{
-		P7OUT &= ~BIT7;  //negative direction
+		P7OUT |= BIT7;  //positive direction
 		xDiff = ( X - Xnew ) * TCK2PXL;
 	}
 
@@ -325,7 +331,12 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 		repeat_it = xDiff / ( 2 * ACCEL_SIZE );
 		num_accel_it = ACCEL_SIZE * repeat_it;
 	}
-	else if( xDiff < ACCEL_SIZE )
+	else
+	{
+		accel_it = 3;
+		num_accel_it = 1;
+	}
+	/*else if( xDiff < ACCEL_SIZE )
 	{
 		it_skip = ACCEL_SIZE / ( xDiff / 2 );
 		accel_it = ACCEL_SIZE - 1 - ( it_skip * ( xDiff / 2 - 1 ) );
@@ -335,7 +346,7 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 	{
 		accel_it = ACCEL_SIZE - ( xDiff / 2 );
 		num_accel_it = ACCEL_SIZE - accel_it;
-	}
+	}*/
 
 	// Why did I think this was needed?
 	//num_accel_it /= it_skip;
@@ -421,32 +432,37 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 
 	if(Y<Ynew)
 	{
-		P4OUT |= BIT0;  //positive direction
+		P4OUT &= ~BIT0;  //positive direction
 		yDiff = ( Ynew - Y ) * TCK2PXL;
 	}
 	else
 	{
-		P4OUT &= ~BIT0;  //positive direction
-		yDiff = ( Ynew - Y ) * TCK2PXL;
+		P4OUT |= BIT0;  //positive direction
+		yDiff = ( Y - Ynew ) * TCK2PXL;
 	}
 
 
-	if( xDiff > ( 2 * ACCEL_SIZE ) )
+	if( yDiff > ( 2 * ACCEL_SIZE ) )
 	{
-		repeat_it = xDiff / ( 2 * ACCEL_SIZE );
+		repeat_it = yDiff / ( 2 * ACCEL_SIZE );
 		num_accel_it = ACCEL_SIZE * repeat_it;
 	}
-	else if( xDiff < ACCEL_SIZE )
+	else
 	{
-		it_skip = ACCEL_SIZE / ( xDiff / 2 );
-		accel_it = ACCEL_SIZE - 1 - ( it_skip * ( xDiff / 2 - 1 ) );
-		num_accel_it = xDiff / 2;
+		accel_it = 3;
+		num_accel_it = 1;
 	}
-	else if( xDiff < ( 2 * ACCEL_SIZE ) )
+	/*else if( yDiff < ACCEL_SIZE )
 	{
-		accel_it = ACCEL_SIZE - ( xDiff / 2 );
+		it_skip = ACCEL_SIZE / ( yDiff / 2 );
+		accel_it = ACCEL_SIZE - 1 - ( it_skip * ( yDiff / 2 - 1 ) );
+		num_accel_it = yDiff / 2;
+	}
+	else if( yDiff < ( 2 * ACCEL_SIZE ) )
+	{
+		accel_it = ACCEL_SIZE - ( yDiff / 2 );
 		num_accel_it = ACCEL_SIZE - accel_it;
-	}
+	}*/
 
 
 
@@ -550,13 +566,39 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 #ifdef DEBUG
 void homeLaser(void){
 
+	uint16_t i = 0;
+	uint16_t trig_count = 0;
+
 	///////////////Set Direction Negative//////////
 	P4OUT &= ~BIT0;  //negative X direction
     P8OUT &= ~BIT2;  //negative Y direction
 	/////////////////////////////////////////////////
 
 
-	while (homeX==1){
+	while (homeX==1)
+	{
+		if( debounce_xhome == TRUE )
+		{
+			P2IE &= ~BIT0;
+			delay_ms( 5 );
+
+			/*for( i = 0; i < 100; i++ )
+			{
+				if( !( P2IN & BIT0 ) )
+				{
+					trig_count++
+			}*/
+
+			if( !( P2IN & BIT0 ) )
+			{
+				homeX = 0;
+				X = 0;
+			}
+			else
+			{
+				debounce_xhome = FALSE;
+			}
+		}
 
 		//P4OUT &= ~BIT0; //negative direction ONLY FOR LAUNCHPAD TESTING
 		P4OUT |= BIT3;  //set step pin ONLY FOR LAUNCHPAD TESTING
@@ -570,7 +612,23 @@ void homeLaser(void){
 
 
 
-	while (homeY==1){
+	while (homeY==1)
+	{
+		if( debounce_yhome == TRUE )
+		{
+			P2IE  &= ~BIT1;
+
+			delay_ms( 5 );
+			if( !( P2IN & BIT1 ) )
+			{
+				homeY = 0;
+				Y = 0;
+			}
+			else
+			{
+				debounce_yhome = FALSE;
+			}
+		}
 
 		// P8OUT &= ~BIT2;  // Negative direction ONLY FOR LAUNCHPAD TESTING
 		P3OUT |= BIT7;   // Set step pin ONLY FOR LAUNCHPAD TESTING
@@ -591,38 +649,90 @@ void homeLaser(void){
 void homeLaser(void){
 
 	///////////////Set Direction Negative//////////
-	P7OUT &= ~BIT7;  //negative X direction
-    P4OUT &= ~BIT0;  //negative Y direction
+	P4OUT |= BIT6;  //unreset drivers
+	P7OUT &= ~BIT6;  //enable drivers
+
+	P7OUT |= BIT7;  //negative X direction
+    P4OUT |= BIT0;  //negative Y direction
+
+    P2IE |= BIT0;
+    P2IE |= BIT1;
 	/////////////////////////////////////////////////
 
 
-	while (homeX==1){
+	while( homeX == 1 )
+	{
+		if( debounce_xhome == TRUE )
+		{
+			P2IE  &= ~BIT0;
+			delay_ms( 5 );
 
-		//P7OUT &= ~BIT7; //negative direction
-		P7OUT |= BIT5;  //set step pin
+			if( !( P2IN & BIT0 ) )
+			{
+				// Interrupt was true - homing end
+				homeX = 0;
+				X = 0;
+			}
+			else
+			{
+				// Interrupt was false - wait for another
+				debounce_xhome = FALSE;
+				P2IE  |= BIT0;
+			}
+		}
+		else
+		{
+			//P7OUT &= ~BIT7; //negative direction
+			P7OUT |= BIT5;  //set step pin
 
-		delay_10us( HOME_TCK_DELAY );
+			delay_10us( HOME_TCK_DELAY );
 
-		P7OUT &= ~BIT5;
+			P7OUT &= ~BIT5;
 
-		delay_10us( HOME_TCK_DELAY );
+			delay_10us( HOME_TCK_DELAY );
+		}
 	}
 
 
-	while (homeY==1){
+	while( homeY == 1 )
+	{
+		if( debounce_yhome == TRUE )
+		{
+			P2IE  &= ~BIT1;
 
-		// P4OUT &= ~BIT0; // Negative direction
-		P3OUT |= BIT6;  // Set step pin
+			delay_ms( 5 );
+			if( !( P2IN & BIT1 ) )
+			{
+				// Interrupt was true - homing end
+				homeY = 0;
+				Y = 0;
+			}
+			else
+			{
+				// Interrupt was false - wait for another
+				debounce_yhome = FALSE;
+				P2IE |= BIT1;
+			}
+		}
+		else
+		{
+			// P4OUT &= ~BIT0; // Negative direction
+			P3OUT |= BIT6;  // Set step pin
 
-		delay_10us( HOME_TCK_DELAY );
+			delay_10us( HOME_TCK_DELAY );
 
-		P3OUT &= ~BIT7; //reset step pin
+			P3OUT &= ~BIT6; //reset step pin
 
-		delay_10us( HOME_TCK_DELAY );
+			delay_10us( HOME_TCK_DELAY );
+		}
 	}
 
 	P4OUT &= ~BIT6;  //reset drivers
 	P7OUT |= BIT6;  //disable drivers
+	
+	// Turn the interrupts off
+	P2IE  &= ~BIT0;
+	P2IE  &= ~BIT1;
 }
 #endif
 //============================================================================
@@ -666,36 +776,42 @@ __interrupt void Port_2(void)
 #pragma vector=PORT2_VECTOR
 __interrupt void Port_2(void)
 {
+	volatile uint16_t fuck_all_the_things = P2IV;
+
 	//unsigned int flag = (P1IFG & P1IE);
-	if(P2IV_P2IFG0){   //XHOME P2.0 interrupt
+	if( fuck_all_the_things & P2IV_P2IFG0 ){   //XHOME P2.0 interrupt
 
 		P7OUT &= ~BIT5; //stop stepping
-		homeX = 0;
-		X=0;
-		P2IFG &= ~BIT0; // P2.0 IFG cleared
+		//homeX = 0;
+		//X=0;
+
+		debounce_xhome = TRUE;
 
 		P3OUT |= PCB_LED;	// Turn on the debug LED
 	}
-	if(P2IV_P2IFG1){   //YHOME P2.1 interrupt
+	if( fuck_all_the_things & P2IV_P2IFG1 ){   //YHOME P2.1 interrupt
 
 		P3OUT &= ~BIT6; //stop stepping
-		homeY = 0;
-		Y =0;
-		P2IFG &= ~BIT1; // P2.1 IFG cleared
+		//homeY = 0;
+		//Y =0;
+
+		debounce_yhome = TRUE;
 
 		P3OUT &= ~PCB_LED;	// Turn on the debug LED
 	}
-	if(P2IV_P2IFG2){   // Lid P2.2 interrupt
+	if( fuck_all_the_things & P2IV_P2IFG2 ){   // Lid P2.2 interrupt
 		lid = 0;
+
+		debounce_lid = TRUE;
 
 		// need to shut down laser here
 		if( picture_ip == TRUE )
 		{
 			halt_burn();
 		}
-
-		P2IFG &= ~BIT2; // P2.2 IFG cleared
 	}
+
+	P2IFG &= ~BIT2; // P2.2 IFG cleared
 }
 #endif
 

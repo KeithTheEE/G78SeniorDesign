@@ -27,6 +27,12 @@
 void init_laser( void );
 void enable_laser( void );
 void disable_laser( void );
+
+void init_fan( void );
+void enable_fan( void );
+void disable_fan( void );
+
+
 void turn_on_laser( uint16_t intensity );
 void turn_on_laser_timed( uint16_t intensity, uint16_t duration );
 void turn_off_laser( void );

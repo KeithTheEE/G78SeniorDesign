@@ -65,7 +65,7 @@ int main( void )
 	#else
 		init_pcb_input();
 		init_pcb_LED();
-		P3OUT |= PCB_LED;	// Turn on the debug LED
+		// P3OUT |= PCB_LED;	// Turn on the debug LED
 	#endif
 
 	init_clocks();
@@ -451,6 +451,7 @@ int main( void )
 					{
 						// Door has been opened
 						door_opened = TRUE;
+						P3OUT ^= PCB_LED;	// Turn on the debug LED
 					}
 				}
 			}

@@ -478,7 +478,7 @@ void homeLaser(void){
 	/////////////////////////////////////////////////
 
 
-	while (homeX==1)
+	while( homeX == 1 )
 	{
 		if( debounce_xhome == TRUE )
 		{
@@ -553,16 +553,30 @@ void homeLaser(void){
 
 	///////////////Set Direction Negative//////////
 	P4OUT |= BIT6;  //unreset drivers
-	P7OUT &= ~BIT6;  //enable drivers
+	P7OUT &= ~BIT6; //enable drivers
 
 	P7OUT |= BIT7;  //negative X direction
     P4OUT |= BIT0;  //negative Y direction
-
-    // Enable interrupts
-    P2IE |= BIT0;
-    P2IE |= BIT1;
 	/////////////////////////////////////////////////
 
+    if( !( P2IN & BIT0 ) )
+    {
+    	delay_ms( 20 );
+
+		if( !( P2IN & BIT0 ) )
+		{
+			// Interrupt was true - homing end
+			homeX = 0;
+			X = 0;
+		}
+    }
+
+    // If not already at home, enable the interrupt and home
+    if( homeX == 1 )
+    {
+    	 // Enable interrupts
+    	 P2IE |= BIT0;
+    }
 
 	while( homeX == 1 )
 	{
@@ -596,6 +610,28 @@ void homeLaser(void){
 			delay_10us( HOME_TCK_DELAY );
 		}
 	}
+
+
+
+	// Y-Axis Homing
+    if( !( P2IN & BIT1 ) )
+    {
+    	delay_ms( 20 );
+
+		if( !( P2IN & BIT1 ) )
+		{
+			// Interrupt was true - homing end
+			homeY = 0;
+			Y = 0;
+		}
+    }
+
+    // If not already at home, enable the interrupt and home
+    if( homeY == 1 )
+    {
+    	 // Enable interrupts
+    	 P2IE |= BIT1;
+    }
 
 
 	while( homeY == 1 )

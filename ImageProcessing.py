@@ -690,7 +690,7 @@ def main():
     # Now we wait until the micro is initalized:
     # this
     # THIS IS ONLY COMMENTED TO TEST, FIX FOR FULL COMM SUPPORT
-    myImg = takePic()
+    # myImg = takePic()
 
 
     response = 2

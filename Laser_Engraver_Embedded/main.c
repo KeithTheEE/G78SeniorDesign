@@ -68,6 +68,7 @@ int main( void )
 	init_clocks();
 	initWaitTimer();
 	init_laser();
+	init_fan();
     init_uart();
 	initMotorIO();
 
@@ -253,20 +254,27 @@ int main( void )
 	
 	// ------------------------------
 	// Test Motor Drivers
-	while(1)
+	/*while(1)
 	{
-		for( i = 0; i < 100; i++ )
-		{
-			moveMotors(i,0);
-		}
+		moveMotors(100,100);
+		delay_ms( 10 );
+		moveMotors(0,0);
+		delay_ms( 10 );
 
-		delay_ms( 10 );
-		for( i = 0; i < 100; i++ )
-		{
-			moveMotors(99-i,0);
-		}
-		delay_ms( 10 );
-	}
+
+
+		//for( i = 0; i < 100; i++ )
+		//{
+		//	moveMotors(i,0);
+		//}
+
+		//delay_ms( 10 );
+		//for( i = 0; i < 100; i++ )
+		//{
+		//	moveMotors(99-i,0);
+		//}
+		//delay_ms( 10 );
+	}*/
 	// ------------------------------
 
 	

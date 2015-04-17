@@ -144,7 +144,7 @@ void initMotorIO(void)
 	P2OUT |= BIT0;
 	P2IES |= BIT0; // ISR triggered hi-lo transition
 	P2IFG &= ~BIT0; // P2.0 IFG cleared
-	P2IE  |= BIT0;
+	// P2IE  |= BIT0;
 	///////////////////////////////////////////////////////////////
 
 	/////////////////////////// Sets up P2.1 as interrupt//////////////////
@@ -316,12 +316,12 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 	////////////////Set X Direction//////////////////////////
 	if(X<Xnew)
 	{
-		P7OUT |= BIT7;  //positive direction
+		P7OUT &= ~BIT7;  //negative direction
 		xDiff = ( Xnew - X ) * TCK2PXL;
 	}
 	else
 	{
-		P7OUT &= ~BIT7;  //negative direction
+		P7OUT |= BIT7;  //positive direction
 		xDiff = ( X - Xnew ) * TCK2PXL;
 	}
 
@@ -432,12 +432,12 @@ uint8_t moveMotors(unsigned int Xnew, unsigned int Ynew){
 
 	if(Y<Ynew)
 	{
-		P4OUT |= BIT0;  //positive direction
+		P4OUT &= ~BIT0;  //positive direction
 		yDiff = ( Ynew - Y ) * TCK2PXL;
 	}
 	else
 	{
-		P4OUT &= ~BIT0;  //positive direction
+		P4OUT |= BIT0;  //positive direction
 		yDiff = ( Y - Ynew ) * TCK2PXL;
 	}
 
@@ -579,7 +579,7 @@ void homeLaser(void){
 	{
 		if( debounce_xhome == TRUE )
 		{
-			P2IE  &= ~BIT0;
+			P2IE &= ~BIT0;
 			delay_ms( 5 );
 
 			/*for( i = 0; i < 100; i++ )
@@ -660,27 +660,22 @@ void homeLaser(void){
 	/////////////////////////////////////////////////
 
 
-	while (homeX==1)
+	while( homeX == 1 )
 	{
 		if( debounce_xhome == TRUE )
 		{
 			P2IE  &= ~BIT0;
 			delay_ms( 5 );
 
-			/*for( i = 0; i < 100; i++ )
-			{
-				if( !( P2IN & BIT0 ) )
-				{
-					trig_count++
-			}*/
-
 			if( !( P2IN & BIT0 ) )
 			{
+				// Interrupt was true - homing end
 				homeX = 0;
 				X = 0;
 			}
 			else
 			{
+				// Interrupt was false - wait for another
 				debounce_xhome = FALSE;
 				P2IE  |= BIT0;
 			}
@@ -699,7 +694,7 @@ void homeLaser(void){
 	}
 
 
-	while (homeY==1)
+	while( homeY == 1 )
 	{
 		if( debounce_yhome == TRUE )
 		{
@@ -708,11 +703,13 @@ void homeLaser(void){
 			delay_ms( 5 );
 			if( !( P2IN & BIT1 ) )
 			{
+				// Interrupt was true - homing end
 				homeY = 0;
 				Y = 0;
 			}
 			else
 			{
+				// Interrupt was false - wait for another
 				debounce_yhome = FALSE;
 				P2IE |= BIT1;
 			}
@@ -732,6 +729,10 @@ void homeLaser(void){
 
 	P4OUT &= ~BIT6;  //reset drivers
 	P7OUT |= BIT6;  //disable drivers
+	
+	// Turn the interrupts off
+	P2IE  &= ~BIT0;
+	P2IE  &= ~BIT1;
 }
 #endif
 //============================================================================

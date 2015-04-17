@@ -544,12 +544,14 @@ def getThresh(myImg):
 
     mass = sum(hist)
     curMass = 0
-    divisions = 4.9
+    divisions = 5.001
     thresholdLevels = []
     for i in range(len(hist)):
 	curMass += hist[i]
 	if curMass >= mass/divisions :
+	    mass = mass - curMass
 	    curMass = 0
+	    divisions = divisions - 1
 	    thresholdLevels.append(i)
     while True:
 	if len(thresholdLevels) < 4:

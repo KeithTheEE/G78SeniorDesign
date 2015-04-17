@@ -64,6 +64,8 @@ void disable_laser( void )
 {
 	P1OUT |= LASER_ENA_PIN;		// Laser enabled
 
+	disable_fan();
+
 	return;
 }
 //============================================================================
@@ -73,6 +75,43 @@ void disable_laser( void )
 void enable_laser( void )
 {
 	P1OUT &= ~LASER_ENA_PIN;	// Laser disabled
+
+	enable_fan();
+
+	return;
+}
+//============================================================================
+
+
+
+void init_fan( void )
+{
+	disable_fan();
+
+	// Set Port 1.2 I/O to GPIO mode (laser enable pin)
+	P7OUT |=  FAN_ENA_PIN;	// Laser disabled
+	P7SEL &= ~FAN_ENA_PIN;	// Select I/O
+	P7DIR &= ~FAN_ENA_PIN;	// Select output
+
+	return;
+}
+//============================================================================
+
+
+
+void enable_fan( void )
+{
+	P7OUT |= FAN_ENA_PIN;	// Fan enabled
+
+	return;
+}
+//============================================================================
+
+
+
+void disable_fan( void )
+{
+	P7OUT &= ~FAN_ENA_PIN;	// Fan disabled
 
 	return;
 }

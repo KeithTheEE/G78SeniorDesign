@@ -34,11 +34,14 @@ extern volatile uint8_t picture_ip;
 extern volatile uint8_t pi_init;
 extern uint32_t time_ms;
 
+extern volatile uint8_t debounce_xhome;
+extern volatile uint8_t debounce_yhome;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
-int main(void)
-C{
+int main( void )
+{
 	// ------------------------------
 	// Variable Declaration
 	int32_t i, j;
@@ -68,10 +71,22 @@ C{
     init_uart();
 	initMotorIO();
 
-	// homeLaser();
+	homeLaser();
 	enable_laser();
 	delay_ms( 8000 );
 	disable_laser();
+
+	/*volatile uint8_t ccs_bullshit = 0;
+
+	while( debounce_yhome == FALSE )
+	{
+		delay_ms( 5 );
+		if( !( P2IN & BIT1 ) )
+		{
+			ccs_bullshit++;
+		}
+	}*/
+
 	// ------------------------------
 	
 	
@@ -238,13 +253,20 @@ C{
 	
 	// ------------------------------
 	// Test Motor Drivers
-	/*while(1)
+	while(1)
 	{
-       moveMotors(1,1);
-       delay_ms( 10 );
-       moveMotors(0,0);
-       delay_ms( 10 );
-	}*/
+		for( i = 0; i < 100; i++ )
+		{
+			moveMotors(i,0);
+		}
+
+		delay_ms( 10 );
+		for( i = 0; i < 100; i++ )
+		{
+			moveMotors(99-i,0);
+		}
+		delay_ms( 10 );
+	}
 	// ------------------------------
 
 	

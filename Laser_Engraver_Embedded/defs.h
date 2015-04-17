@@ -3,7 +3,7 @@
 // Name        : defs.h
 // Author      : Garin Newcomb
 // Email       : gpnewcomb@live.com
-// Date		   : 2014-10-11 (Created), 2015-04-01 (Last Updated)
+// Date		   : 2014-10-11 (Created), 2015-04-16 (Last Updated)
 // Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
 // Description : Header file to define macros used for in the project
 //============================================================================
@@ -45,6 +45,7 @@
 #define LASER_ENA_PIN			BIT3
 
 #define FAN_ENA_PIN				BIT0
+#define LID_OPEN				BIT4
 
 #define LASER_INTENSITY_MASK	0x18
 #define LASER_INTENSITY_SHIFT	3

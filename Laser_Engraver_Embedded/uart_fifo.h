@@ -3,7 +3,7 @@
 // Name        : uart_fifo.h
 // Author      : Garin Newcomb, Tyler Troyer, and Chris Haggart
 // Email       : gpnewcomb@live.com, troyerta@gmail.com, and chaggart5@gmail.com
-// Date		   : 2014-10-11 (Created), 2015-03-18 (Last Updated)
+// Date		   : 2014-10-11 (Created), 2015-04-16 (Last Updated)
 // Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
 // Description : Header file including function prototypes and macros used for
 //				 uart communication

@@ -3,7 +3,7 @@
 // Name        : laser_driver.c
 // Author      : Garin Newcomb
 // Email       : gpnewcomb@live.com
-// Date		   : 2015-02-05 (Created), 2015-03-18 (Last Updated)
+// Date		   : 2015-02-05 (Created), 2015-04-16 (Last Updated)
 // Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
 // Description : Source code to drive the analog input to the laser driver via
 //				 PWM
@@ -89,9 +89,9 @@ void init_fan( void )
 	disable_fan();
 
 	// Set Port 1.2 I/O to GPIO mode (laser enable pin)
-	P7OUT |=  FAN_ENA_PIN;	// Laser disabled
+	P7OUT &= ~FAN_ENA_PIN;	// Laser disabled
 	P7SEL &= ~FAN_ENA_PIN;	// Select I/O
-	P7DIR &= ~FAN_ENA_PIN;	// Select output
+	P7DIR |=  FAN_ENA_PIN;	// Select output
 
 	return;
 }
@@ -205,9 +205,13 @@ void respond_to_burn_cmd( uint8_t * burn_cmd_payload )
 	}
 
 	
-	//uint8_t laser_intensity = ( burn_cmd_payload[0] & LASER_INTENSITY_MASK ) >> LASER_INTENSITY_SHIFT;
+	if( !( P6IN & LID_OPEN ) )
+	{
+		disable_laser();
+		while( !( P6IN & LID_OPEN ) );
+		enable_laser();
+	}
 
-	//delay_ms( 50 );
 
 	switch( laser_intensity )
 	{
@@ -239,6 +243,19 @@ void respond_to_burn_cmd( uint8_t * burn_cmd_payload )
 
 
 
+void init_lid_safety( void )
+{
+	/////////////////////////// Sets up P6.4 as interrupt//////////////////
+	P6DIR &= ~BIT4;  // pull up resistor
+	P6REN |=  BIT4;  // pull up resistor
+	P6OUT |=  BIT4;
+
+	return;
+}
+//============================================================================
+
+
+
 void halt_burn( void )
 {
 	// First disable the laser and make sure the PWM input is off
@@ -252,6 +269,29 @@ void halt_burn( void )
 	
 	return;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*
+#pragma vector=PORT6_VECTOR
+__interrupt void PORT_6_ISR(void)
+{
+	volatile uint16_t fuck_all_the_things = P2IV;
+
+	if( fuck_all_the_things & P6IV_P6IFG2 ){   // Lid P2.2 interrupt
+		lid = 0;
+
+		debounce_lid = TRUE;
+
+		// need to shut down laser here
+		if( picture_ip == TRUE )
+		{
+			halt_burn();
+		}
+	}
+
+	P2IFG &= ~BIT2; // P2.2 IFG cleared
+}*/
 
 ////////////////////////////////////////////////////////////////////////////////
 

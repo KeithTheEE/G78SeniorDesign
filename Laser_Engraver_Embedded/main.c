@@ -3,7 +3,7 @@
 // Name        : main.c
 // Author      : Garin Newcomb and Tyler Troyer
 // Email       : gpnewcomb@live.com and troyerta@gmail.com
-// Date		   : 2014-10-11 (Created), 2015-04-01 (Last Updated)
+// Date		   : 2014-10-11 (Created), 2015-04-16 (Last Updated)
 // Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
 // Description : Laser Engraver Embedded project 'Main' file, including
 //				 'main()'
@@ -36,6 +36,9 @@ extern uint32_t time_ms;
 
 extern volatile uint8_t debounce_xhome;
 extern volatile uint8_t debounce_yhome;
+
+// Declare true initially so it doesn't have to be opened again after startup
+volatile uint8_t door_opened = TRUE;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,8 +74,11 @@ int main( void )
 	init_fan();
     init_uart();
 	initMotorIO();
+	init_lid_safety();
 
-	homeLaser();
+	// homeLaser();		// Wait for Pi init command
+
+	// Enable laser on powerup (wait >7 seconds)
 	enable_laser();
 	delay_ms( 8000 );
 	disable_laser();
@@ -438,6 +444,14 @@ int main( void )
 				if( picture_ip == TRUE )
 				{
 					if( burn_ready == TRUE ) { respond_to_burn_cmd( rx_data.data ); }
+				}
+				else
+				{
+					if( !( P6IN & LID_OPEN ) )
+					{
+						// Door has been opened
+						door_opened = TRUE;
+					}
 				}
 			}
 		}

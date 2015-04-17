@@ -3,7 +3,7 @@
 // Name        : time.c
 // Author      : Garin Newcomb
 // Email       : gpnewcomb@live.com
-// Date		   : 2014-03-08 (Created), 2015-03-08 (Last Updated)
+// Date		   : 2014-03-08 (Created), 2015-04-08 (Last Updated)
 // Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
 // Description : Source code for setting up clocks, and timers, as well as any
 //				 other time-related functionality

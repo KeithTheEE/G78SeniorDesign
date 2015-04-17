@@ -3,7 +3,7 @@
 // Name        : time.h
 // Author      : Garin Newcomb and Tyler Troyer
 // Email       : gpnewcomb@live.com and troyerta@gmail.com
-// Date		   : 2015-03-08 (Created), 2015-03-08 (Last Updated)
+// Date		   : 2015-03-08 (Created), 2015-04-08 (Last Updated)
 // Copyright   : Copyright 2014-2015 University of Nebraska-Lincoln
 // Description : Header file including function prototypes and macros used for
 //				 to setup and control clocks, timers, etc.

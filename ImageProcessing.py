@@ -688,7 +688,9 @@ def main():
     # Now we wait until the micro is initalized:
     # this
     # THIS IS ONLY COMMENTED TO TEST, FIX FOR FULL COMM SUPPORT
-    
+    myImg = takePic()
+
+
     response = 2
     time.sleep(1)
     print "waiting for Garin"

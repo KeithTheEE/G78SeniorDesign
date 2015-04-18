@@ -47,12 +47,14 @@ volatile uint8_t packet_ready;
 volatile uint8_t burn_ready = FALSE;
 volatile uint8_t picture_ip = FALSE;
 volatile uint8_t pi_init    = FALSE;
+volatile uint8_t first_pixel = FALSE;
 
 extern volatile uint32_t time_ms;
 extern volatile uint8_t door_opened;
 
 volatile uint32_t last_rx_time 	     = UINT32_MAX;
 volatile uint32_t pixel_request_time = UINT32_MAX;
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -604,9 +606,20 @@ void check_and_respond_to_msg( struct TPacket_Data * rx_data )
 				{
 					send_ack( lrx_data.command, ACK_MSG );
 					burn_ready = TRUE;
+					pixel_request_time = UINT32_MAX;
+
+					if( first_pixel == TRUE )
+					{
+						enable_laser();
+						delay_ms( 1 );
+						first_pixel = FALSE;
+					}
 				}
 				else if( lrx_data.command == CMD_START )
 				{
+					// Make sure the door isn't currently open
+					while( !( P6IN & LID_OPEN ) );
+
 					if( door_opened == FALSE )
 					{
 						// If the door hasn't been opened yet, wait for it to open (then close)
@@ -616,12 +629,13 @@ void check_and_respond_to_msg( struct TPacket_Data * rx_data )
 					}
 
 					send_ack( lrx_data.command, ACK_MSG );
-					enable_laser();
+
 					picture_ip = TRUE;
 					burn_ready = FALSE;
+					first_pixel = TRUE;
 
 					// Since a burn pixel command should be imminent, start the timer for the timeout
-					pixel_request_time = time_ms;
+					//pixel_request_time = time_ms;
 
 					homeLaser();
 				}
@@ -662,12 +676,14 @@ void check_and_respond_to_msg( struct TPacket_Data * rx_data )
 		}
 
 		if( rx_data != 0 ) { *rx_data = lrx_data; }
+		
+		//packet_ready = 0;
 	}
 	else
 	{
 		if( pixel_request_time != UINT32_MAX )
 		{
-			int32_t time_since_rq  = time_ms - pixel_request_time;
+			volatile int32_t time_since_rq = time_ms - pixel_request_time;
 
 			if( time_since_rq > PIXEL_TIMEOUT )
 			{

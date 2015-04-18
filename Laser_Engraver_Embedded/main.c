@@ -430,6 +430,14 @@ int main( void )
 		struct TPacket_Data rx_data;
 		check_and_respond_to_msg( &rx_data );
 
+		if( !( P6IN & LID_OPEN ) )
+		{
+			// Door has been opened
+			door_opened = TRUE;
+			P3OUT ^= PCB_LED;	// Turn on the debug LED
+		}
+
+
 		if( pi_init != FALSE )
 		{
 			if( pi_init == JUST_INITIALIZED )

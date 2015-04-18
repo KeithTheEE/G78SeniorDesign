@@ -265,7 +265,7 @@ void halt_burn( void )
 	picture_ip = FALSE;
 	
 	// Tell the Pi the burn is ending
-	send_burn_stop();
+	// send_burn_stop();
 	
 	return;
 }

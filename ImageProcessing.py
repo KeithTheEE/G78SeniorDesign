@@ -277,7 +277,7 @@ def runImageSide(mode, q, pq, ser, size):
     while True:
 	# Take Picture
 	#myImg = takePic()
-	myImg = "KandS.png"
+	myImg = "KandS2.png"
 	# Start Image command
 	response = 2
 	rpSerial.sendX(ser, chr(startX))

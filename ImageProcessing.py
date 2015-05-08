@@ -405,9 +405,6 @@ def rasterQ(imagA, q, levels, printq):
     payload = buildpayload(3, 0, 0, False)
     q.put(payload)
 
-    print "Adjust if needed"
-    time.sleep(3)
-    
 
     for i in range(xSize):
 	for j in range(ySize):
@@ -580,6 +577,8 @@ def getThresh(myImg):
 	    break
 	    
 
+
+    thresholdLevels = [90, 155, 196, 225]
     return thresholdLevels
 
 

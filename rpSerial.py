@@ -425,6 +425,17 @@ def logicFlow2(ser, payload):
     sendX(ser, chr(endX))
     return 0
 
+def coolDown(oldepoch, runTime, sleepTime):
+    if time.time() - oldepoch > 60*runTime:
+	oldepoch = time.time()
+	print "**COOLING DOWN**"
+	while True:
+	    if time.time() - oldepoch > 60*sleepTime:
+		break
+	    print int((time.time()-oldepoch)/60), ":",int((time.time()-oldepoch)%60), " Minutes left"
+	oldepoch = time.time()
+
+    return oldepoch
 
 def rpSerialManager(q, ser):
     pixCount = 0
@@ -436,6 +447,10 @@ def rpSerialManager(q, ser):
     receiveX(ser, [chr(startX), chr(error), chr(endX)])
     
     #ser.write("HSDF")
+    # Run for n minutes, sleep for m minutes
+    oldepoch = time.time()
+    sleepTime = 5
+    runTime = 10
 
     #ser.write("HEN")
     while (i < 5):
@@ -444,6 +459,7 @@ def rpSerialManager(q, ser):
 	while not q.empty():
 	    payload = q.get()
 	    check = logicFlow2(ser, payload)
+	    oldepoch = coolDown(oldepoch, runTime, sleepTime)
 	    if check == 1:
 		# Communictation lost, return error code 1: Comm Lost
 		return 1

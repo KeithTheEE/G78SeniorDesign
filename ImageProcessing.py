@@ -277,7 +277,8 @@ def runImageSide(mode, q, pq, ser, size):
     while True:
 	# Take Picture
 	#myImg = takePic()
-	myImg = "KandS2.png"
+	myImg = "vw.png"
+	size = 190 #**********
 	# Start Image command
 	response = 2
 	rpSerial.sendX(ser, chr(startX))
@@ -391,6 +392,23 @@ def rasterQ(imagA, q, levels, printq):
     msg = ("M", (str(xSize) +" " + str(ySize)))
     printq.put(msg)
     skippedPix = 0
+
+    # Burn four corners
+    payload = buildpayload(3, 0, 0, False)
+    q.put(payload)
+    payload = buildpayload(3, xSize-1, 0, False)
+    q.put(payload)
+    payload = buildpayload(3, xSize-1, ySize-1, False)
+    q.put(payload)
+    payload = buildpayload(3, 0, ySize-1, False)
+    q.put(payload)
+    payload = buildpayload(3, 0, 0, False)
+    q.put(payload)
+
+    print "Adjust if needed"
+    time.sleep(3)
+    
+
     for i in range(xSize):
 	for j in range(ySize):
 	    if (leftToRight == True):

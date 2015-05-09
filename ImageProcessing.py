@@ -277,7 +277,7 @@ def runImageSide(mode, q, pq, ser, size):
     while True:
 	# Take Picture
 	#myImg = takePic()
-	myImg = "Family01Float01.png"
+	myImg = "KandS2Float.png"
 	size = 240  #**********
 	# Start Image command
 	response = 2

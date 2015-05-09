@@ -540,7 +540,7 @@ def probBasedRaster(myImg, size):
 def rasterImage(myImg, size):
     imag = Image.open(myImg)
     imag = imag.convert("L")
-    imag = imag.transpose("FLIP_LEFT_RIGHT")
+    imag = imag.transpose(Image.FLIP_LEFT_RIGHT)
     # Crop Image here
     # box = (left, upper, right, lower)
     # imag = Image.crop(box)

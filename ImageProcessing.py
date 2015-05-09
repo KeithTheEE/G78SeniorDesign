@@ -278,7 +278,7 @@ def runImageSide(mode, q, pq, ser, size):
 	# Take Picture
 	#myImg = takePic()
 	myImg = "Family01Float01.png"
-	size = 240 #**********
+	size = 240  #**********
 	# Start Image command
 	response = 2
 	rpSerial.sendX(ser, chr(startX))

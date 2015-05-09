@@ -277,7 +277,7 @@ def runImageSide(mode, q, pq, ser, size):
     while True:
 	# Take Picture
 	#myImg = takePic()
-	myImg = "Family02.png"
+	myImg = "Family01Float01.png"
 	size = 240 #**********
 	# Start Image command
 	response = 2
@@ -540,6 +540,7 @@ def probBasedRaster(myImg, size):
 def rasterImage(myImg, size):
     imag = Image.open(myImg)
     imag = imag.convert("L")
+    imag = image.transpose(FLIP_LEFT_RIGHT)
     # Crop Image here
     # box = (left, upper, right, lower)
     # imag = Image.crop(box)

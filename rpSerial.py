@@ -432,6 +432,7 @@ def coolDown(oldepoch, runTime, sleepTime):
 	while True:
 	    if time.time() - oldepoch > 60*sleepTime:
 		break
+	    time.sleep(5)
 	    print int((time.time()-oldepoch)/60), ":",int((time.time()-oldepoch)%60), " Minutes left"
 	oldepoch = time.time()
 
@@ -450,7 +451,7 @@ def rpSerialManager(q, ser):
     # Run for n minutes, sleep for m minutes
     oldepoch = time.time()
     sleepTime = 5
-    runTime = 10
+    runTime = 5
 
     #ser.write("HEN")
     while (i < 5):

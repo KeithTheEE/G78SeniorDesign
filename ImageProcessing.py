@@ -296,7 +296,7 @@ def runImageSide(mode, q, pq, ser, size):
 	    threadPop = edQ(myA, q, thresholdLevels, pq)
 	elif (mode == 0):
 	    myA = rasterImage(myImg, size)
-	    thresholdLevs = getThresh(myA)
+	    thresholdLevels = getThresh(myA)
 	    threadPop = rasterQ(myA, q, thresholdLevels, pq)
 	    print "THREAD POP"
    	#time.sleep(.05)

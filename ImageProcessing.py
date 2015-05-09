@@ -392,7 +392,7 @@ def rasterQ(imagA, q, levels, printq):
     msg = ("M", (str(xSize) +" " + str(ySize)))
     printq.put(msg)
     skippedPix = 0
-
+    '''
     # Burn four corners
     payload = buildpayload(3, 0, 0, False)
     q.put(payload)
@@ -404,7 +404,7 @@ def rasterQ(imagA, q, levels, printq):
     q.put(payload)
     payload = buildpayload(3, 0, 0, False)
     q.put(payload)
-
+    '''
 
     for i in range(xSize):
 	for j in range(ySize):

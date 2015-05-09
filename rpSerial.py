@@ -460,7 +460,7 @@ def rpSerialManager(q, ser):
 	while not q.empty():
 	    payload = q.get()
 	    check = logicFlow2(ser, payload)
-	    oldepoch = coolDown(oldepoch, runTime, sleepTime)
+	    #oldepoch = coolDown(oldepoch, runTime, sleepTime)
 	    if check == 1:
 		# Communictation lost, return error code 1: Comm Lost
 		return 1

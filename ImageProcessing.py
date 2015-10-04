@@ -686,7 +686,7 @@ def main():
     mode = raster
     #   Set Serial Ports
     myBaud = 115200
-    myTimeO = 0
+    myTimeO = 1
 
     # Rasp Pi: /dev/ttyAMA0
     # Laptop: check ports: currently ACM0

@@ -441,10 +441,10 @@ def coolDown(oldepoch, runTime, sleepTime):
 def rpSerialManager(q, ser):
     pixCount = 0
     i = 0
-    connected = False
-    while not connected:
-	serin = ser.read()
-	connected = True
+    #connected = False
+    #while not connected:
+	#serin = ser.read()
+	#connected = True
     receiveX(ser, [chr(startX), chr(error), chr(endX)])
     
     #ser.write("HSDF")
